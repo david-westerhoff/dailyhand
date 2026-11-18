@@ -1,0 +1,356 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Daily Hand</title>
+<meta name="description" content="Five cards, once a day. Draw your hand, unlock rare achievements and fill your collection.">
+<style>
+@font-face { font-family: "Bricolage Grotesque"; src: url("fonts/bricolage-grotesque-latin.woff2") format("woff2"); font-weight: 200 800; font-display: swap; }
+@font-face { font-family: "Fraunces"; src: url("fonts/fraunces-latin.woff2") format("woff2"); font-weight: 100 900; font-display: swap; }
+</style>
+<style>
+:root {
+  --bg: #eceee7; --surface: #f8f9f4; --ink: #1d1b17; --muted: #6f6a5e; --line: #ddd5c5;
+  --felt: #1f4d3f; --felt2: #276150; --card: #fffdf8; --red: #c0392b; --black: #1d1b17;
+  --accent: #d9902a;
+  --t-gewoehnlich: #8a8578; --t-ungewoehnlich: #2f8f5b; --t-selten: #2c6fbb; --t-episch: #7b4bb7; --t-legendaer: #c98a12;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #121411; --surface: #1b1e1a; --ink: #e9ece4; --muted: #9ea398; --line: #2e332c;
+    --felt: #173a30; --felt2: #1e4a3d; --card: #fbf8f2; --t-gewoehnlich: #9ea398;
+    --t-ungewoehnlich: #4cb07a; --t-selten: #5b9be0; --t-episch: #a77ce0; --t-legendaer: #e6a92e; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+    --bg: #121411; --surface: #1b1e1a; --ink: #e9ece4; --muted: #9ea398; --line: #2e332c;
+    --felt: #173a30; --felt2: #1e4a3d; --card: #fbf8f2; --t-gewoehnlich: #9ea398;
+    --t-ungewoehnlich: #4cb07a; --t-selten: #5b9be0; --t-episch: #a77ce0; --t-legendaer: #e6a92e; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.45 "Bricolage Grotesque", system-ui, sans-serif; }
+main { max-width: 640px; margin: 0 auto; padding-block: 20px 64px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+@media (prefers-reduced-motion: reduce) { .card, .ach.new { transition: none; animation: none; } }
+header { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 12px; }
+.date { min-width: 0; }
+h1 { font: 800 30px/1 "Fraunces", Georgia, serif; margin: 0; letter-spacing: -0.02em; }
+.date { color: var(--muted); font-size: 14px; }
+.proto { margin: 14px 0 0; padding: 8px 12px; border: 1px dashed var(--line); border-radius: 10px; font-size: 13px; color: var(--muted); display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.proto button { font: inherit; font-size: 13px; padding: 4px 10px; border-radius: 8px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); cursor: pointer; }
+
+.table { margin-top: 18px; background: radial-gradient(120% 90% at 50% 0%, var(--felt2), var(--felt)); border-radius: 22px; padding: 22px 14px 20px; box-shadow: inset 0 0 0 1px rgba(255,255,255,.06), 0 10px 30px -18px rgba(0,0,0,.5); }
+.daycard { color: #e9e2cf; font-size: 13px; text-align: center; margin-bottom: 14px; opacity: .9; }
+.daycard b { font-family: "Fraunces", serif; font-size: 15px; }
+.hand { display: flex; gap: 8px; justify-content: center; perspective: 900px; }
+.slot { width: calc((100% - 32px) / 5); max-width: 96px; aspect-ratio: 5 / 7; }
+.card { position: relative; width: 100%; height: 100%; transform-style: preserve-3d; transform: translateY(0) rotate(0deg) rotateY(0deg) scale(1); }
+.card.up { transform: translateY(0) rotate(0deg) rotateY(180deg) scale(1); }
+/* Anheben, wackeln, umdrehen, ablegen: eine durchgehende Bewegung, alle Schritte mit derselben Transform-Reihenfolge */
+.card.reveal { animation: reveal 1.8s both; }
+.card.reveal .back { box-shadow: 0 0 0 3px var(--accent), 0 14px 26px -8px rgba(0,0,0,.7); transition: box-shadow .3s; }
+@keyframes reveal {
+  0%   { transform: translateY(0) rotate(0deg) rotateY(0deg) scale(1); animation-timing-function: ease-out; }
+  12%  { transform: translateY(-14px) rotate(-3deg) rotateY(0deg) scale(1.03); animation-timing-function: ease-in-out; }
+  22%  { transform: translateY(-14px) rotate(3deg) rotateY(0deg) scale(1.03); animation-timing-function: ease-in-out; }
+  32%  { transform: translateY(-14px) rotate(-2.5deg) rotateY(0deg) scale(1.03); animation-timing-function: ease-in-out; }
+  42%  { transform: translateY(-14px) rotate(2deg) rotateY(0deg) scale(1.03); animation-timing-function: ease-in-out; }
+  52%  { transform: translateY(-18px) rotate(0deg) rotateY(0deg) scale(1.07); animation-timing-function: ease-in; }
+  76%  { transform: translateY(-14px) rotate(0deg) rotateY(160deg) scale(1.07); animation-timing-function: ease-out; }
+  90%  { transform: translateY(2px) rotate(0deg) rotateY(184deg) scale(1); animation-timing-function: ease-in-out; }
+  100% { transform: translateY(0) rotate(0deg) rotateY(180deg) scale(1); }
+}
+.handname { text-align: center; margin-top: 16px; font: 800 26px/1.1 "Fraunces", serif; color: #f1ead8; opacity: 0; transform: scale(.7); transition: opacity .6s, transform .8s cubic-bezier(.2,1.5,.4,1); min-height: 29px; }
+.handname.on { opacity: 1; transform: none; }
+.face, .back { position: absolute; inset: 0; border-radius: 9px; backface-visibility: hidden; }
+.back { background: repeating-linear-gradient(45deg, #2c6b58 0 6px, #245a4a 6px 12px); border: 3px solid #f1ead8; box-shadow: 0 4px 10px -4px rgba(0,0,0,.5); }
+.face { transform: rotateY(180deg); background: var(--card); box-shadow: 0 4px 12px -4px rgba(0,0,0,.55); display: flex; align-items: center; justify-content: center; font-family: "Fraunces", serif; }
+.face.red { color: var(--red); } .face.black { color: var(--black); }
+/* Kartenbild: Wert und Farbe oben links, großes Symbol unten rechts; Größen relativ zur Kartenbreite, damit nichts überlappt */
+.face { container-type: size; }
+.face .corner { position: absolute; top: 6cqw; left: 9cqw; line-height: .95; text-align: center; font-weight: 800; font-size: 23cqw; }
+.face .pip { position: absolute; right: 9cqw; bottom: 4cqw; font-size: 46cqw; line-height: 1; }
+.face.daymark { box-shadow: 0 0 0 3px var(--accent), 0 4px 12px -4px rgba(0,0,0,.55); }
+
+.go { display: block; margin: 20px auto 0; font: 800 18px "Bricolage Grotesque", sans-serif; padding: 14px 34px; border-radius: 999px; border: 0; background: var(--accent); color: #1d1b17; cursor: pointer; box-shadow: 0 6px 0 #a76a14; transition: transform .08s, box-shadow .08s; }
+.go:active { transform: translateY(4px); box-shadow: 0 2px 0 #a76a14; }
+.go[disabled] { display: none; }
+.wait { text-align: center; color: #e9e2cf; font-size: 14px; margin-top: 16px; display: none; }
+
+.score { margin-top: 18px; display: none; text-align: center; }
+.score .pts { font: 800 56px/1 "Fraunces", serif; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; }
+.score .pts small { font-size: 18px; font-weight: 600; color: var(--muted); margin-left: 4px; letter-spacing: 0; }
+.score .pct { margin-top: 6px; color: var(--muted); }
+.late { opacity: 0; transform: translateY(6px); transition: opacity .9s, transform .9s; }
+.late.on { opacity: 1; transform: none; }
+.score .pct b { color: var(--ink); }
+.share { margin-top: 12px; font: 600 15px "Bricolage Grotesque", sans-serif; padding: 9px 20px; border-radius: 999px; border: 1.5px solid var(--ink); background: transparent; color: var(--ink); cursor: pointer; }
+
+h2 { font: 800 20px "Fraunces", serif; margin: 30px 0 10px; display: flex; justify-content: space-between; align-items: baseline; }
+h2 span { font: 400 14px "Bricolage Grotesque", sans-serif; color: var(--muted); }
+.ach { display: grid; grid-template-columns: 6px 1fr auto; gap: 0 12px; align-items: center; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px 10px 0; margin-bottom: 8px; overflow: hidden; }
+.ach.new { animation: flyin 1s cubic-bezier(.18,.9,.3,1) both; }
+@keyframes flyin {
+  0% { opacity: 0; transform: translate(120%, -40px) rotate(8deg) scale(.85); }
+  60% { opacity: 1; transform: translate(-4%, 4px) rotate(-1.5deg) scale(1.02); }
+  80% { transform: translate(1.5%, 0) rotate(.5deg) scale(1); }
+  100% { opacity: 1; transform: none; }
+}
+#today { overflow: hidden; padding: 4px; margin: -4px; }
+.ach .bar { align-self: stretch; margin: -10px 0; background: var(--tc); }
+.ach .nm { font-weight: 600; }
+.ach .ds { font-size: 13px; color: var(--muted); }
+.ach .rt { text-align: right; white-space: nowrap; }
+.ach .tp { font-size: 12px; font-weight: 600; color: var(--tc); text-transform: uppercase; letter-spacing: .04em; }
+.ach .pp { font: 800 17px "Fraunces", serif; font-variant-numeric: tabular-nums; }
+.ach .od { font-size: 12px; color: var(--muted); }
+.ach.legendaer { box-shadow: 0 0 0 1.5px var(--t-legendaer), 0 6px 20px -8px var(--t-legendaer); }
+
+.coll { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
+.ci { border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; background: var(--surface); border-top: 3px solid var(--tc); }
+.ci .nm { font-weight: 600; font-size: 14px; }
+.ci .ds { font-size: 12px; color: var(--muted); }
+.ci .ct { font-size: 12px; margin-top: 4px; color: var(--tc); font-weight: 600; }
+.ci.locked { opacity: .45; border-top-color: var(--line); }
+.ci.locked .ct { color: var(--muted); }
+.grp { font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: 14px 0 6px; font-weight: 600; }
+.toast { position: fixed; left: 50%; bottom: calc(20px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); background: var(--ink); color: var(--bg); padding: 8px 16px; border-radius: 999px; font-size: 14px; opacity: 0; transition: opacity .2s; pointer-events: none; }
+.toast.on { opacity: 1; }
+.tagline { margin: 6px 0 0; color: var(--muted); }
+footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--line); font-size: 13px; color: var(--muted); display: flex; flex-wrap: wrap; gap: 6px 16px; }
+footer a, footer summary { color: var(--muted); cursor: pointer; }
+footer details { flex-basis: 100%; }
+footer details p { margin: 8px 0; max-width: 62ch; line-height: 1.5; }
+a:focus-visible, button:focus-visible, summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+</style>
+</head>
+<body>
+<main>
+  <header><h1>Daily Hand</h1><span class="date" id="date"></span></header>
+  <p class="tagline">Five cards, once a day. How lucky are you?</p>
+  <div class="proto">Test version: “New day” lets you try more hands right away.
+    <button id="newday">New day</button><button id="wipe">Reset collection</button></div>
+
+  <section class="table">
+    <div class="daycard">Card of the day: <b id="daycard"></b></div>
+    <div class="hand" id="hand"></div>
+    <div class="handname" id="handname"></div>
+    <button class="go" id="go">Deal my hand</button>
+    <div class="wait" id="wait"></div>
+  </section>
+
+  <section class="score" id="score">
+    <div class="pts"><span id="pts">0</span><small>points</small></div>
+    <div class="pct late" id="pct"></div>
+    <button class="share late" id="share">Share result</button>
+  </section>
+
+  <section id="todaybox" style="display:none">
+    <h2>Unlocked today <span id="todaycount"></span></h2>
+    <div id="today"></div>
+  </section>
+
+  <h2>Collection <span id="collcount"></span></h2>
+  <div id="coll"></div>
+  <footer>
+    <a href="https://pendelradius.de/impressum" rel="noopener">Legal notice (Impressum)</a>
+    <a href="fonts/OFL-Fraunces.txt">Fraunces font licence</a>
+    <a href="fonts/OFL-BricolageGrotesque.txt">Bricolage Grotesque font licence</a>
+    <details>
+      <summary>Privacy</summary>
+      <p><b>Hosting.</b> This site is hosted on GitHub Pages by GitHub, Inc. (USA). To deliver the page, GitHub processes your IP address and technical request data such as browser and time. Legal basis: Art. 6(1)(f) GDPR, our legitimate interest in a working website. Data may be processed in the USA; GitHub states that it participates in the EU-U.S. Data Privacy Framework. How long GitHub keeps this data is set by GitHub, not by us: <a href="https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement" rel="noopener">GitHub Privacy Statement</a>.</p>
+      <p><b>Your game.</b> Your hands and your collection are saved only in your browser (local storage) so the game remembers today’s hand. Nothing is sent to us. This storage is strictly necessary for the game you asked for (§ 25(2) no. 2 TDDDG). You can delete it at any time with “Reset collection” or in your browser settings.</p>
+      <p><b>No cookies, no tracking, no ads.</b> Fonts are loaded from this site, not from Google.</p>
+      <p><b>Your rights.</b> The controller is named in the legal notice. You have the right to access, rectification, erasure, restriction of processing, data portability and to lodge a complaint with a data protection authority. <b>You may object at any time to processing based on Art. 6(1)(f) GDPR (Art. 21 GDPR).</b> You do not have to provide any data; without your IP address the page cannot be delivered. There is no automated decision-making.</p>
+    </details>
+  </footer>
+</main>
+<div class="toast" id="toast"></div>
+<script>
+/*ACH*/
+var DATA = /*DATA*/;
+(function () {
+  var SUITS = ['♠︎', '♥︎', '♦︎', '♣︎'];
+  var SUIT_NAMES = ['Spades', 'Hearts', 'Diamonds', 'Clubs'];
+  var RANK_FULL = { 11: 'Jack', 12: 'Queen', 13: 'King', 14: 'Ace' };
+  var $ = function (id) { return document.getElementById(id); };
+  var store = {
+    get: function (k) { try { return JSON.parse(localStorage.getItem(k)); } catch (e) { return null; } },
+    set: function (k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+  };
+  var fmt = function (n) { return n.toLocaleString('en-US'); };
+
+  // Prototyp: "Tag" lässt sich vorspulen, damit man mehrere Hände ausprobieren kann
+  var offset = store.get('th-offset') || 0;
+  var now = new Date(Date.now() + offset * 864e5);
+  var dayKey = now.getFullYear() + '-' + (now.getMonth() + 1) + '-' + now.getDate();
+  $('date').textContent = now.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+
+  var seed = now.getFullYear() * 10000 + (now.getMonth() + 1) * 100 + now.getDate();
+  var dayCard = Math.imul(seed, 2654435761) >>> 0; dayCard = dayCard % 52;
+  var dr = TH.rankOf(dayCard);
+  $('daycard').textContent = (RANK_FULL[dr] || dr) + ' of ' + SUIT_NAMES[TH.suitOf(dayCard)] + ' ' + SUITS[TH.suitOf(dayCard)];
+
+  function cardHTML(id) {
+    var s = TH.suitOf(id), r = TH.rankLabel(TH.rankOf(id));
+    var cls = (s === 1 || s === 2 ? 'red' : 'black') + (id === dayCard ? ' daymark' : '');
+    var corner = r + '<br>' + SUITS[s];
+    return '<div class="card"><div class="back"></div><div class="face ' + cls + '"><div class="corner">' + corner +
+      '</div><div class="pip">' + SUITS[s] + '</div></div></div>';
+  }
+  function emptyHand() {
+    var h = '';
+    for (var i = 0; i < 5; i++) h += '<div class="slot"><div class="card"><div class="back"></div></div></div>';
+    $('hand').innerHTML = h;
+  }
+
+  function drawHand() {
+    var deck = [], out = [], buf = new Uint32Array(5);
+    for (var i = 0; i < 52; i++) deck.push(i);
+    crypto.getRandomValues(buf);
+    for (var j = 0; j < 5; j++) { var k = j + (buf[j] % (52 - j)); var t = deck[j]; deck[j] = deck[k]; deck[k] = t; out.push(deck[j]); }
+    return out;
+  }
+  function info(i) {
+    var a = TH.LIST[i], p = DATA.prob[a.id];
+    return { a: a, p: p, pts: TH.ptsOf(p), tier: TH.tierOf(p) };
+  }
+  function percentile(score) {
+    var lo = 0;
+    for (var i = 0; i < DATA.cdf.length; i++) if (DATA.cdf[i][0] === score) return DATA.cdf[i][1];
+    return lo;
+  }
+  function oneIn(p) {
+    var n = 1 / p;
+    if (n < 10) return '1 in ' + n.toFixed(1);
+    return '1 in ' + fmt(Math.round(n));
+  }
+  function pctText(x) {
+    var v = x * 100;
+    if (v >= 99.9) return v.toFixed(4);
+    if (v >= 99) return v.toFixed(2);
+    return v.toFixed(1);
+  }
+
+  function achRow(x, isNew) {
+    return '<div class="ach ' + x.tier.id + (isNew ? ' new' : '') + '" style="--tc:var(--t-' + x.tier.id + ')">' +
+      '<div class="bar"></div><div><div class="nm">' + x.a.name + '</div><div class="ds">' + x.a.desc + '</div></div>' +
+      '<div class="rt"><div class="tp">' + x.tier.name + '</div><div class="pp">+' + fmt(x.pts) + '</div><div class="od">' + oneIn(x.p) + '</div></div></div>';
+  }
+
+  function renderCollection() {
+    var coll = store.get('th-coll') || {}, have = 0, html = '', lastG = '';
+    // nach Seltenheit sortiert: von gewöhnlich bis legendär, je Stufe eine Überschrift
+    var order = TH.LIST.map(function (a, i) { return i; }).sort(function (a, b) { return DATA.prob[TH.LIST[b].id] - DATA.prob[TH.LIST[a].id]; });
+    order.forEach(function (i) {
+      var x = info(i), n = coll[x.a.id] || 0;
+      if (n) have++;
+      if (x.tier.id !== lastG) { if (lastG) html += '</div>'; html += '<div class="grp" style="color:var(--t-' + x.tier.id + ')">' + x.tier.name + '</div><div class="coll">'; lastG = x.tier.id; }
+      html += '<div class="ci' + (n ? '' : ' locked') + '" style="--tc:var(--t-' + x.tier.id + ')"><div class="nm">' + x.a.name +
+        '</div><div class="ds">' + x.a.desc + '</div><div class="ct">' + (n ? n + '× · ' : '') + x.tier.name + ' · ' + oneIn(x.p) + '</div></div>';
+    });
+    $('coll').innerHTML = html + '</div>';
+    $('collcount').textContent = have + ' of ' + TH.LIST.length;
+  }
+
+  function showResult(hand, animate) {
+    var hits = TH.hits(hand, dayCard).map(info).sort(function (a, b) { return a.pts - b.pts; });
+    var total = hits.reduce(function (s, x) { return s + x.pts; }, 0);
+    var slots = $('hand').children;
+    hand.forEach(function (id, i) { slots[i].innerHTML = cardHTML(id); });
+    var cards = $('hand').querySelectorAll('.card');
+    var ph = hits.filter(function (x) { return x.a.g === 'poker'; })[0];
+    // Jede Karte hebt sich erst an und wackelt (Spannung), dann dreht sie sich um; die letzte wackelt länger
+    cards.forEach(function (c, i) {
+      if (!animate) { c.classList.add('up'); return; }
+      var t = 600 + i * FLIP, td = i === 4 ? TEASE_LAST : TEASE;
+      setTimeout(function () {
+        if (REDUCE) { c.classList.add('up'); return; }
+        c.style.animationDuration = td + 'ms'; c.classList.add('reveal');
+      }, t);
+      // Endzustand von .up ist identisch mit dem letzten Schritt der Animation, daher kein Sprung
+      c.addEventListener('animationend', function () { c.classList.add('up'); c.classList.remove('reveal'); }, { once: true });
+    });
+    var nameAt = animate ? 600 + 4 * FLIP + TEASE_LAST + 900 : 0;
+    setTimeout(function () { $('handname').textContent = ph.a.name; $('handname').classList.add('on'); }, nameAt);
+    var after = animate ? nameAt + PAUSE : 0;
+
+    $('go').disabled = true;
+    setTimeout(function () {
+      $('score').style.display = 'block';
+      $('todaybox').style.display = 'block';
+      $('todaycount').textContent = hits.length + (hits.length === 1 ? ' achievement' : ' achievements');
+      $('pct').innerHTML = 'Better than <b>' + pctText(percentile(total)) + '%</b> of all possible hands';
+      var list = $('today'); list.innerHTML = '';
+      var shown = 0, step = animate ? STEP : 0;
+      hits.forEach(function (x, i) {
+        setTimeout(function () {
+          list.insertAdjacentHTML('afterbegin', achRow(x, animate));
+          countTo(shown, shown + x.pts, animate ? 700 : 0);
+          shown += x.pts;
+        }, i * step);
+      });
+      // Prozentwert und Teilen erst ganz am Ende, sonst verrät der Wert vorab, wie gut die Hand ist
+      setTimeout(function () {
+        $('pct').classList.add('on'); $('share').classList.add('on');
+        $('wait').style.display = 'block'; tick(); if (animate) renderCollection();
+      }, animate ? hits.length * step + 1000 : 0);
+      shareText = 'Daily Hand · ' + now.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + '\n' +
+        hand.map(function (id) { return TH.rankLabel(TH.rankOf(id)) + SUITS[TH.suitOf(id)]; }).join(' ') + '\n' +
+        fmt(total) + ' points · better than ' + pctText(percentile(total)) + '%\n' +
+        'Rarest: ' + hits[hits.length - 1].a.name + ' (' + oneIn(hits[hits.length - 1].p) + ')\n' + location.origin + location.pathname;
+    }, after);
+    return hits;
+  }
+
+  var shareText = '';
+  // Zeiten in ms: Abstand zwischen Karten, Wackeln vor dem Aufdecken, Pause nach dem Handnamen, Abstand zwischen Erfolgen
+  var FLIP = 2200, TEASE = 2000, TEASE_LAST = 3000, PAUSE = 2500, STEP = 1200;
+  var REDUCE = false;
+  try { REDUCE = matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) {}
+  var countTimer = null;
+  function countTo(from, to, ms) {
+    clearInterval(countTimer);
+    if (!ms) { $('pts').textContent = fmt(to); return; }
+    var t0 = Date.now();
+    countTimer = setInterval(function () {
+      var k = Math.min(1, (Date.now() - t0) / ms), e = 1 - Math.pow(1 - k, 3);
+      $('pts').textContent = fmt(Math.round(from + (to - from) * e));
+      if (k >= 1) clearInterval(countTimer);
+    }, 30);
+  }
+  function tick() {
+    var real = new Date(), next = new Date(real); next.setHours(24, 0, 0, 0);
+    var s = Math.max(0, Math.floor((next - real) / 1000));
+    var h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60), sec = s % 60;
+    $('wait').textContent = 'Next hand in ' + h + 'h ' + String(m).padStart(2, '0') + 'm ' + String(sec).padStart(2, '0') + 's';
+  }
+  setInterval(function () { if ($('wait').style.display === 'block') tick(); }, 1000);
+
+  emptyHand();
+  renderCollection();
+  var saved = store.get('th-day-' + dayKey);
+  if (saved) showResult(saved, false);
+
+  $('go').onclick = function () {
+    var hand = drawHand();
+    store.set('th-day-' + dayKey, hand);
+    var coll = store.get('th-coll') || {};
+    TH.hits(hand, dayCard).forEach(function (i) { var id = TH.LIST[i].id; coll[id] = (coll[id] || 0) + 1; });
+    store.set('th-coll', coll);
+    showResult(hand, true);
+  };
+  $('share').onclick = function () {
+    var done = function () { var t = $('toast'); t.textContent = 'Copied to clipboard'; t.classList.add('on'); setTimeout(function () { t.classList.remove('on'); }, 1600); };
+    try { navigator.clipboard.writeText(shareText).then(done, function () { fallback(); }); } catch (e) { fallback(); }
+  };
+  function fallback() { var t = $('toast'); t.textContent = shareText.split('\n').join(' · '); t.classList.add('on'); setTimeout(function () { t.classList.remove('on'); }, 5000); }
+  $('newday').onclick = function () { store.set('th-offset', offset + 1); location.reload(); };
+  $('wipe').onclick = function () {
+    try { Object.keys(localStorage).forEach(function (k) { if (k.indexOf('th-') === 0) localStorage.removeItem(k); }); } catch (e) {}
+    location.reload();
+  };
+})();
+</script>
+</body>
+</html>

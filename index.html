@@ -1,0 +1,478 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Daily Hand</title>
+<meta name="description" content="Five cards, once a day. Draw your hand, unlock rare achievements and fill your collection.">
+<style>
+@font-face { font-family: "Bricolage Grotesque"; src: url("fonts/bricolage-grotesque-latin.woff2") format("woff2"); font-weight: 200 800; font-display: swap; }
+@font-face { font-family: "Fraunces"; src: url("fonts/fraunces-latin.woff2") format("woff2"); font-weight: 100 900; font-display: swap; }
+</style>
+<style>
+:root {
+  --bg: #eceee7; --surface: #f8f9f4; --ink: #1d1b17; --muted: #6f6a5e; --line: #ddd5c5;
+  --felt: #1f4d3f; --felt2: #276150; --card: #fffdf8; --red: #c0392b; --black: #1d1b17;
+  --accent: #d9902a;
+  --t-gewoehnlich: #8a8578; --t-ungewoehnlich: #2f8f5b; --t-selten: #2c6fbb; --t-episch: #7b4bb7; --t-legendaer: #c98a12;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #121411; --surface: #1b1e1a; --ink: #e9ece4; --muted: #9ea398; --line: #2e332c;
+    --felt: #173a30; --felt2: #1e4a3d; --card: #fbf8f2; --t-gewoehnlich: #9ea398;
+    --t-ungewoehnlich: #4cb07a; --t-selten: #5b9be0; --t-episch: #a77ce0; --t-legendaer: #e6a92e; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+    --bg: #121411; --surface: #1b1e1a; --ink: #e9ece4; --muted: #9ea398; --line: #2e332c;
+    --felt: #173a30; --felt2: #1e4a3d; --card: #fbf8f2; --t-gewoehnlich: #9ea398;
+    --t-ungewoehnlich: #4cb07a; --t-selten: #5b9be0; --t-episch: #a77ce0; --t-legendaer: #e6a92e; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.45 "Bricolage Grotesque", system-ui, sans-serif; }
+main { max-width: 640px; margin: 0 auto; padding-block: 20px 64px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+@media (prefers-reduced-motion: reduce) { .card, .ach.new { transition: none; animation: none; } }
+header { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 12px; }
+.date { min-width: 0; }
+h1 { font: 800 30px/1 "Fraunces", Georgia, serif; margin: 0; letter-spacing: -0.02em; }
+.date { color: var(--muted); font-size: 14px; }
+.proto { margin: 14px 0 0; padding: 8px 12px; border: 1px dashed var(--line); border-radius: 10px; font-size: 13px; color: var(--muted); display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.proto button { font: inherit; font-size: 13px; padding: 4px 10px; border-radius: 8px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); cursor: pointer; }
+
+.table { margin-top: 18px; background: radial-gradient(120% 90% at 50% 0%, var(--felt2), var(--felt)); border-radius: 22px; padding: 22px 14px 20px; box-shadow: inset 0 0 0 1px rgba(255,255,255,.06), 0 10px 30px -18px rgba(0,0,0,.5); }
+.daycard { color: #e9e2cf; font-size: 13px; text-align: center; margin-bottom: 14px; opacity: .9; }
+.daycard b { font-family: "Fraunces", serif; font-size: 15px; }
+.hand { display: flex; gap: 8px; justify-content: center; perspective: 900px; }
+.slot { width: calc((100% - 32px) / 5); max-width: 96px; aspect-ratio: 5 / 7; }
+.card { position: relative; width: 100%; height: 100%; transform-style: preserve-3d; transform: translateY(0) rotate(0deg) rotateY(0deg) scale(1); }
+.card.up { transform: translateY(0) rotate(0deg) rotateY(180deg) scale(1); }
+/* Anheben, wackeln, umdrehen, ablegen: eine durchgehende Bewegung, alle Schritte mit derselben Transform-Reihenfolge */
+.card.reveal { animation: reveal 1.8s both; }
+.card.reveal .back { box-shadow: 0 0 0 3px var(--accent), 0 14px 26px -8px rgba(0,0,0,.7); transition: box-shadow .3s; }
+@keyframes reveal {
+  0%   { transform: translateY(0) rotate(0deg) rotateY(0deg) scale(1); animation-timing-function: ease-out; }
+  12%  { transform: translateY(-14px) rotate(-3deg) rotateY(0deg) scale(1.03); animation-timing-function: ease-in-out; }
+  22%  { transform: translateY(-14px) rotate(3deg) rotateY(0deg) scale(1.03); animation-timing-function: ease-in-out; }
+  32%  { transform: translateY(-14px) rotate(-2.5deg) rotateY(0deg) scale(1.03); animation-timing-function: ease-in-out; }
+  42%  { transform: translateY(-14px) rotate(2deg) rotateY(0deg) scale(1.03); animation-timing-function: ease-in-out; }
+  52%  { transform: translateY(-18px) rotate(0deg) rotateY(0deg) scale(1.07); animation-timing-function: ease-in; }
+  76%  { transform: translateY(-14px) rotate(0deg) rotateY(160deg) scale(1.07); animation-timing-function: ease-out; }
+  90%  { transform: translateY(2px) rotate(0deg) rotateY(184deg) scale(1); animation-timing-function: ease-in-out; }
+  100% { transform: translateY(0) rotate(0deg) rotateY(180deg) scale(1); }
+}
+.handname { text-align: center; margin-top: 16px; font: 800 26px/1.1 "Fraunces", serif; color: #f1ead8; opacity: 0; transform: scale(.7); transition: opacity .6s, transform .8s cubic-bezier(.2,1.5,.4,1); min-height: 29px; }
+.handname.on { opacity: 1; transform: none; }
+.face, .back { position: absolute; inset: 0; border-radius: 9px; backface-visibility: hidden; }
+.back { background: repeating-linear-gradient(45deg, #2c6b58 0 6px, #245a4a 6px 12px); border: 3px solid #f1ead8; box-shadow: 0 4px 10px -4px rgba(0,0,0,.5); }
+.face { transform: rotateY(180deg); background: var(--card); box-shadow: 0 4px 12px -4px rgba(0,0,0,.55); display: flex; align-items: center; justify-content: center; font-family: "Fraunces", serif; }
+.face.red { color: var(--red); } .face.black { color: var(--black); }
+/* Kartenbild: Wert und Farbe oben links, großes Symbol unten rechts; Größen relativ zur Kartenbreite, damit nichts überlappt */
+.face { container-type: size; }
+.face .corner { position: absolute; top: 6cqw; left: 9cqw; line-height: .95; text-align: center; font-weight: 800; font-size: 23cqw; }
+.face .pip { position: absolute; right: 9cqw; bottom: 4cqw; font-size: 46cqw; line-height: 1; }
+.face.daymark { box-shadow: 0 0 0 3px var(--accent), 0 4px 12px -4px rgba(0,0,0,.55); }
+
+.go { display: block; margin: 20px auto 0; font: 800 18px "Bricolage Grotesque", sans-serif; padding: 14px 34px; border-radius: 999px; border: 0; background: var(--accent); color: #1d1b17; cursor: pointer; box-shadow: 0 6px 0 #a76a14; transition: transform .08s, box-shadow .08s; }
+.go:active { transform: translateY(4px); box-shadow: 0 2px 0 #a76a14; }
+.go[disabled] { display: none; }
+.wait { text-align: center; color: #e9e2cf; font-size: 14px; margin-top: 16px; display: none; }
+
+.score { margin-top: 18px; display: none; text-align: center; }
+.score .pts { font: 800 56px/1 "Fraunces", serif; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; }
+.score .pts small { font-size: 18px; font-weight: 600; color: var(--muted); margin-left: 4px; letter-spacing: 0; }
+.score .pct { margin-top: 6px; color: var(--muted); }
+.late { opacity: 0; transform: translateY(6px); transition: opacity .9s, transform .9s; }
+.late.on { opacity: 1; transform: none; }
+.score .pct b { color: var(--ink); }
+.share { margin-top: 12px; font: 600 15px "Bricolage Grotesque", sans-serif; padding: 9px 20px; border-radius: 999px; border: 1.5px solid var(--ink); background: transparent; color: var(--ink); cursor: pointer; }
+
+h2 { font: 800 20px "Fraunces", serif; margin: 30px 0 10px; display: flex; justify-content: space-between; align-items: baseline; }
+h2 span { font: 400 14px "Bricolage Grotesque", sans-serif; color: var(--muted); }
+.ach { display: grid; grid-template-columns: 6px 1fr auto; gap: 0 12px; align-items: center; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px 10px 0; margin-bottom: 8px; overflow: hidden; }
+.ach.new { animation: flyin 1s cubic-bezier(.18,.9,.3,1) both; }
+@keyframes flyin {
+  0% { opacity: 0; transform: translate(120%, -40px) rotate(8deg) scale(.85); }
+  60% { opacity: 1; transform: translate(-4%, 4px) rotate(-1.5deg) scale(1.02); }
+  80% { transform: translate(1.5%, 0) rotate(.5deg) scale(1); }
+  100% { opacity: 1; transform: none; }
+}
+#today { overflow: hidden; padding: 4px; margin: -4px; }
+.ach .bar { align-self: stretch; margin: -10px 0; background: var(--tc); }
+.ach .nm { font-weight: 600; }
+.ach .ds { font-size: 13px; color: var(--muted); }
+.ach .rt { text-align: right; white-space: nowrap; }
+.ach .tp { font-size: 12px; font-weight: 600; color: var(--tc); text-transform: uppercase; letter-spacing: .04em; }
+.ach .pp { font: 800 17px "Fraunces", serif; font-variant-numeric: tabular-nums; }
+.ach .od { font-size: 12px; color: var(--muted); }
+.ach.legendaer { box-shadow: 0 0 0 1.5px var(--t-legendaer), 0 6px 20px -8px var(--t-legendaer); }
+
+.coll { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
+.ci { border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; background: var(--surface); border-top: 3px solid var(--tc); }
+.ci .nm { font-weight: 600; font-size: 14px; }
+.ci .ds { font-size: 12px; color: var(--muted); }
+.ci .ct { font-size: 12px; margin-top: 4px; color: var(--tc); font-weight: 600; }
+.ci.locked { opacity: .45; border-top-color: var(--line); }
+.ci.locked .ct { color: var(--muted); }
+.grp { font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: 14px 0 6px; font-weight: 600; }
+.toast { position: fixed; left: 50%; bottom: calc(20px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); background: var(--ink); color: var(--bg); padding: 8px 16px; border-radius: 999px; font-size: 14px; opacity: 0; transition: opacity .2s; pointer-events: none; }
+.toast.on { opacity: 1; }
+.tagline { margin: 6px 0 0; color: var(--muted); }
+footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--line); font-size: 13px; color: var(--muted); display: flex; flex-wrap: wrap; gap: 6px 16px; }
+footer a, footer summary { color: var(--muted); cursor: pointer; }
+footer details { flex-basis: 100%; }
+footer details p { margin: 8px 0; max-width: 62ch; line-height: 1.5; }
+a:focus-visible, button:focus-visible, summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+</style>
+</head>
+<body>
+<main>
+  <header><h1>Daily Hand</h1><span class="date" id="date"></span></header>
+  <p class="tagline">Five cards, once a day. How lucky are you?</p>
+  <div class="proto">Test version: “New day” lets you try more hands right away.
+    <button id="newday">New day</button><button id="wipe">Reset collection</button></div>
+
+  <section class="table">
+    <div class="daycard">Card of the day: <b id="daycard"></b></div>
+    <div class="hand" id="hand"></div>
+    <div class="handname" id="handname"></div>
+    <button class="go" id="go">Deal my hand</button>
+    <div class="wait" id="wait"></div>
+  </section>
+
+  <section class="score" id="score">
+    <div class="pts"><span id="pts">0</span><small>points</small></div>
+    <div class="pct late" id="pct"></div>
+    <button class="share late" id="share">Share result</button>
+  </section>
+
+  <section id="todaybox" style="display:none">
+    <h2>Unlocked today <span id="todaycount"></span></h2>
+    <div id="today"></div>
+  </section>
+
+  <h2>Collection <span id="collcount"></span></h2>
+  <div id="coll"></div>
+  <footer>
+    <a href="https://pendelradius.de/impressum" rel="noopener">Legal notice (Impressum)</a>
+    <a href="fonts/OFL-Fraunces.txt">Fraunces font licence</a>
+    <a href="fonts/OFL-BricolageGrotesque.txt">Bricolage Grotesque font licence</a>
+    <details>
+      <summary>Privacy</summary>
+      <p><b>Hosting.</b> This site is hosted on GitHub Pages by GitHub, Inc. (USA). To deliver the page, GitHub processes your IP address and technical request data such as browser and time. Legal basis: Art. 6(1)(f) GDPR, our legitimate interest in a working website. Data may be processed in the USA; GitHub states that it participates in the EU-U.S. Data Privacy Framework. How long GitHub keeps this data is set by GitHub, not by us: <a href="https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement" rel="noopener">GitHub Privacy Statement</a>.</p>
+      <p><b>Your game.</b> Your hands and your collection are saved only in your browser (local storage) so the game remembers today’s hand. Nothing is sent to us. This storage is strictly necessary for the game you asked for (§ 25(2) no. 2 TDDDG). You can delete it at any time with “Reset collection” or in your browser settings.</p>
+      <p><b>No cookies, no tracking, no ads.</b> Fonts are loaded from this site, not from Google.</p>
+      <p><b>Your rights.</b> The controller is named in the legal notice. You have the right to access, rectification, erasure, restriction of processing, data portability and to lodge a complaint with a data protection authority. <b>You may object at any time to processing based on Art. 6(1)(f) GDPR (Art. 21 GDPR).</b> You do not have to provide any data; without your IP address the page cannot be delivered. There is no automated decision-making.</p>
+    </details>
+  </footer>
+</main>
+<div class="toast" id="toast"></div>
+<script>
+// Karten: id 0..51, Rang = id%13 + 2 (2..14, 14 = Ass), Farbe = floor(id/13): 0 Pik, 1 Herz, 2 Karo, 3 Kreuz
+var TH = (function () {
+  var RANK_NAMES = { 11: 'J', 12: 'Q', 13: 'K', 14: 'A' };
+  function rankOf(id) { return (id % 13) + 2; }
+  function suitOf(id) { return Math.floor(id / 13); }
+  function rankLabel(r) { return RANK_NAMES[r] || String(r); }
+  function num(r) { return r === 14 ? 1 : r; } // Ass zählt als 1 für Zahlen-Erfolge
+  function cardId(rank, suit) { return suit * 13 + (rank - 2); }
+
+  function analyse(ids, dayCard) {
+    var rc = new Array(15).fill(0), sc = [0, 0, 0, 0], ranks = [], suits = [];
+    for (var i = 0; i < 5; i++) {
+      var r = rankOf(ids[i]), s = suitOf(ids[i]);
+      rc[r]++; sc[s]++; ranks.push(r); suits.push(s);
+    }
+    var groups = rc.filter(function (c) { return c > 0; }).sort(function (a, b) { return b - a; });
+    var flush = Math.max.apply(null, sc) === 5;
+    var distinct = groups.length === 5;
+    var lo = Math.min.apply(null, ranks), hi = Math.max.apply(null, ranks);
+    var wheel = distinct && rc[14] && rc[2] && rc[3] && rc[4] && rc[5];
+    var straight = distinct && (hi - lo === 4 || wheel);
+    // längste Folge aufeinanderfolgender Ränge (Ass auch als 1)
+    var has = function (r) { return r === 1 ? rc[14] > 0 : rc[r] > 0; };
+    var run = 0, best = 0;
+    for (var r = 1; r <= 14; r++) { run = has(r) ? run + 1 : 0; if (run > best) best = run; }
+    return { ids: ids, rc: rc, sc: sc, ranks: ranks, suits: suits, groups: groups, flush: flush,
+      straight: straight, lo: lo, run: best, dayCard: dayCard };
+  }
+
+  function pokerHand(h) {
+    var g = h.groups;
+    if (h.straight && h.flush) return h.lo === 10 ? 'royal' : 'sflush';
+    if (g[0] === 4) return 'vierling';
+    if (g[0] === 3 && g[1] === 2) return 'fullhouse';
+    if (h.flush) return 'flush';
+    if (h.straight) return 'strasse';
+    if (g[0] === 3) return 'drilling';
+    if (g[0] === 2 && g[1] === 2) return 'zweipaare';
+    if (g[0] === 2) return 'paar';
+    return 'luft';
+  }
+
+  function every(h, fn) { for (var i = 0; i < 5; i++) if (!fn(h.ranks[i], h.suits[i])) return false; return true; }
+  function count(h, fn) { var n = 0; for (var i = 0; i < 5; i++) if (fn(h.ranks[i], h.suits[i])) n++; return n; }
+  function holds(h, id) { return h.ids.indexOf(id) >= 0; }
+  function isFace(r) { return r >= 11 && r <= 13; }
+  var PRIMES = { 2: 1, 3: 1, 5: 1, 7: 1, 11: 1, 13: 1 };
+
+  function can21(h) {
+    var sum = 0;
+    for (var i = 0; i < 5; i++) { var r = h.ranks[i]; sum += r === 14 ? 1 : Math.min(r, 10); }
+    for (var a = 0; a <= h.rc[14]; a++) if (sum + 10 * a === 21) return true;
+    return false;
+  }
+
+  // gruppe: poker | farben | bilder | zahlen | besonders
+  var LIST = [
+    { id: 'luft', g: 'poker', name: 'High Card', desc: 'No pair, no straight, no flush' },
+    { id: 'paar', g: 'poker', name: 'One Pair', desc: 'Two cards of the same rank' },
+    { id: 'zweipaare', g: 'poker', name: 'Two Pair', desc: 'Two different pairs' },
+    { id: 'drilling', g: 'poker', name: 'Three of a Kind', desc: 'Three cards of the same rank' },
+    { id: 'strasse', g: 'poker', name: 'Straight', desc: 'Five ranks in a row, e.g. 5-6-7-8-9' },
+    { id: 'flush', g: 'poker', name: 'Flush', desc: 'Five cards of one suit' },
+    { id: 'fullhouse', g: 'poker', name: 'Full House', desc: 'Three of a kind plus a pair' },
+    { id: 'vierling', g: 'poker', name: 'Four of a Kind', desc: 'Four cards of the same rank' },
+    { id: 'sflush', g: 'poker', name: 'Straight Flush', desc: 'A straight in one suit' },
+    { id: 'royal', g: 'poker', name: 'Royal Flush', desc: '10-J-Q-K-A in one suit' },
+
+    { id: 'rot', g: 'farben', name: 'Seeing Red', desc: 'Only hearts and diamonds', t: function (h) { return every(h, function (r, s) { return s === 1 || s === 2; }); } },
+    { id: 'schwarz', g: 'farben', name: 'Blackout', desc: 'Only spades and clubs', t: function (h) { return every(h, function (r, s) { return s === 0 || s === 3; }); } },
+    { id: 'vierfarben', g: 'farben', name: 'Full Spectrum', desc: 'All four suits in your hand', t: function (h) { return h.sc.every(function (c) { return c > 0; }); } },
+    { id: 'fastflush', g: 'farben', name: 'Almost a Flush', desc: 'Four cards of one suit', t: function (h) { return Math.max.apply(null, h.sc) === 4; } },
+    { id: 'liebesbrief', g: 'farben', name: 'Love Letter', desc: 'Five hearts', t: function (h) { return h.sc[1] === 5; } },
+
+    { id: 'hofstaat', g: 'bilder', name: 'Royal Court', desc: 'At least three face cards (J, Q, K)', t: function (h) { return count(h, isFace) >= 3; } },
+    { id: 'nurbilder', g: 'bilder', name: 'Nobility', desc: 'Five face cards', t: function (h) { return count(h, isFace) === 5; } },
+    { id: 'ehepaar', g: 'bilder', name: 'Royal Couple', desc: 'King and queen of the same suit', t: function (h) { for (var s = 0; s < 4; s++) if (holds(h, cardId(13, s)) && holds(h, cardId(12, s))) return true; return false; } },
+    { id: 'volk', g: 'bilder', name: 'Commoners', desc: 'No jack, queen, king or ace', t: function (h) { return every(h, function (r) { return r <= 10; }); } },
+    { id: 'einass', g: 'bilder', name: 'Ace up the Sleeve', desc: 'Exactly one ace', t: function (h) { return h.rc[14] === 1; } },
+    { id: 'asse', g: 'bilder', name: 'Aces High', desc: 'At least two aces', t: function (h) { return h.rc[14] >= 2; } },
+
+    { id: 'faststrasse', g: 'zahlen', name: 'Almost a Straight', desc: 'Four ranks in a row, but no straight', t: function (h) { return !h.straight && h.run === 4; } },
+    { id: 'treppe', g: 'zahlen', name: 'Stairs', desc: 'Three ranks in a row', t: function (h) { return h.run === 3; } },
+    { id: 'gerade', g: 'zahlen', name: 'All Even', desc: 'Only even values (J = 11, Q = 12, K = 13, A = 1)', t: function (h) { return every(h, function (r) { return num(r) % 2 === 0; }); } },
+    { id: 'ungerade', g: 'zahlen', name: 'All Odd', desc: 'Only odd values (J = 11, Q = 12, K = 13, A = 1)', t: function (h) { return every(h, function (r) { return num(r) % 2 === 1; }); } },
+    { id: 'primzahlen', g: 'zahlen', name: 'Prime Time', desc: 'Only 2, 3, 5, 7, J (11) and K (13)', t: function (h) { return every(h, function (r) { return PRIMES[num(r)]; }); } },
+    { id: 'klein', g: 'zahlen', name: 'Small Change', desc: 'Only A, 2, 3, 4 and 5', t: function (h) { return every(h, function (r) { return num(r) <= 5; }); } },
+    { id: 'hoch', g: 'zahlen', name: 'High Society', desc: 'Only 10, J, Q, K and A', t: function (h) { return every(h, function (r) { return r >= 10; }); } },
+    { id: 'einundzwanzig', g: 'zahlen', name: 'Blackjack', desc: 'Card values add up to exactly 21 (faces 10, ace 1 or 11)', t: can21 },
+
+    { id: 'tageskarte', g: 'besonders', name: 'Card of the Day', desc: 'Today’s card is in your hand', t: function (h) { return holds(h, h.dayCard); } },
+    { id: 'sieben', g: 'besonders', name: 'Lucky Sevens', desc: 'Three sevens', t: function (h) { return h.rc[7] >= 3; } },
+    { id: 'teufel', g: 'besonders', name: '666', desc: 'Three sixes', t: function (h) { return h.rc[6] >= 3; } },
+    { id: 'pech', g: 'besonders', name: 'Worst Hand', desc: '7-5-4-3-2 without a flush, the worst hand in poker', t: function (h) { return !h.flush && h.rc[7] && h.rc[5] && h.rc[4] && h.rc[3] && h.rc[2] ? true : false; } },
+    { id: 'deadman', g: 'besonders', name: 'Dead Man’s Hand', desc: 'Ace and 8 of spades, ace and 8 of clubs', t: function (h) { return holds(h, cardId(14, 0)) && holds(h, cardId(14, 3)) && holds(h, cardId(8, 0)) && holds(h, cardId(8, 3)); } }
+  ];
+
+  var TIERS = [
+    { id: 'legendaer', name: 'Legendary', max: 1e-4, pts: 5000 },
+    { id: 'episch', name: 'Epic', max: 1e-3, pts: 1000 },
+    { id: 'selten', name: 'Rare', max: 1e-2, pts: 250 },
+    { id: 'ungewoehnlich', name: 'Uncommon', max: 1e-1, pts: 50 },
+    { id: 'gewoehnlich', name: 'Common', max: 2, pts: 10 }
+  ];
+  function tierOf(p) { for (var i = 0; i < TIERS.length; i++) if (p < TIERS[i].max) return TIERS[i]; }
+  // Punkte wachsen mit der Wurzel der Seltenheit: 1 von 4 -> 10, 1 von 100 -> 50, 1 von 650 000 -> 4030
+  function ptsOf(p) { return Math.max(5, Math.round(Math.sqrt(1 / p)) * 5); }
+
+  // Gibt Indizes der erreichten Erfolge zurück
+  function hits(ids, dayCard) {
+    var h = analyse(ids, dayCard), ph = pokerHand(h), out = [];
+    for (var i = 0; i < LIST.length; i++) {
+      var a = LIST[i];
+      if (a.g === 'poker' ? a.id === ph : a.t(h)) out.push(i);
+    }
+    return out;
+  }
+
+  return { LIST: LIST, TIERS: TIERS, tierOf: tierOf, ptsOf: ptsOf, hits: hits, rankOf: rankOf, suitOf: suitOf,
+    rankLabel: rankLabel, cardId: cardId };
+})();
+if (typeof module !== 'undefined') module.exports = TH;
+
+var DATA = {"total":2598960,"prob":{"luft":0.5011773940345369,"paar":0.4225690276110444,"zweipaare":0.0475390156062425,"drilling":0.02112845138055222,"strasse":0.003924646781789639,"flush":0.001965401545233478,"fullhouse":0.0014405762304921968,"vierling":0.00024009603841536616,"sflush":0.000013851694523963431,"royal":0.0000015390771693292702,"rot":0.025310124049619846,"schwarz":0.025310124049619846,"vierfarben":0.2637454981992797,"fastflush":0.0429171668667467,"liebesbrief":0.0004951980792316927,"hofstaat":0.07394957983193277,"nurbilder":0.0003047372795271955,"ehepaar":0.030055098962661987,"volk":0.14505494505494507,"einass":0.2994736356080894,"asse":0.04168436605411395,"faststrasse":0.037627358635762,"treppe":0.19909502262443438,"gerade":0.016354234001292826,"ungerade":0.037815126050420166,"primzahlen":0.016354234001292826,"klein":0.005965463108320251,"hoch":0.005965463108320251,"einundzwanzig":0.014476559854711116,"tageskarte":0.09615384615384616,"sieben":0.001754547973035368,"teufel":0.001754547973035368,"pech":0.0003924646781789639,"deadman":0.00001846892603195124},"cdf":[[5,0],[10,0.0985094037615046],[15,0.18281197094222304],[20,0.3304841167236125],[25,0.440286883984363],[30,0.5496979561055191],[35,0.6313713947117309],[40,0.7145673654077015],[45,0.7710534213685474],[50,0.818824068088774],[55,0.8568519715578539],[60,0.8778646073814141],[65,0.9069154584910888],[70,0.9253620679040847],[75,0.938132175947302],[80,0.9516133376427494],[85,0.9585811247575954],[90,0.964406916612799],[95,0.969978375965771],[100,0.974756825807246],[105,0.9775614091790562],[110,0.9799458244836396],[115,0.9823329331732693],[120,0.9844291562778957],[125,0.9862548865700126],[130,0.9876031181703451],[135,0.9884992458521871],[140,0.9889567365407702],[145,0.9894488564656632],[150,0.9904850401699141],[155,0.9909329116261889],[160,0.9927105457567642],[165,0.993171114599686],[170,0.9942569335426479],[175,0.9950595622864531],[180,0.9956636500754148],[185,0.9962873610982854],[190,0.9965978699171977],[195,0.996814879798073],[200,0.9971330840028318],[205,0.997241973712562],[210,0.9975086188321483],[215,0.9976629113183735],[220,0.997727167790193],[225,0.9979553359805461],[230,0.997993428140487],[235,0.9981003940037554],[240,0.9981273278542186],[245,0.9981319450857266],[250,0.9981727306307139],[255,0.9982189029457937],[260,0.9982466063348416],[265,0.9982973958814295],[270,0.9983458768122634],[275,0.9983504940437714],[280,0.9984035922061132],[285,0.9984059008218672],[290,0.9984197525163911],[295,0.9984289869794072],[300,0.9984336042109151],[305,0.9984451472896851],[310,0.998470542062979],[315,0.998475159294487],[325,0.9985144057623049],[330,0.9985282574568289],[335,0.9985374919198449],[340,0.9988083695016469],[345,0.9988176039646628],[350,0.9989114876719919],[355,0.9989376519838705],[360,0.9989526579862714],[365,0.9989711269123034],[370,0.9989957521470126],[375,0.9990796318527411],[380,0.9990915597008034],[385,0.9992089143349647],[390,0.9992747098839536],[395,0.9993305014313417],[400,0.9994166897528242],[405,0.999457090528519],[410,0.9995024933050143],[415,0.9995359682334473],[420,0.9996009942438514],[425,0.999630621479361],[430,0.9996648659463786],[435,0.9996775633330255],[440,0.9997614430387539],[445,0.9997629821159233],[450,0.9998195432018961],[455,0.9998260842798657],[460,0.9998580201311293],[465,0.9998595592082987],[470,0.999865715516976],[475,0.9998780281343307],[480,0.9998795672115],[485,0.9998826453658386],[490,0.999883030135131],[495,0.9998845692123003],[500,0.9998872625973466],[510,0.9998964970603627],[520,0.9999138116785176],[530,0.9999168898328562],[535,0.9999261242958722],[540,0.9999292024502109],[565,0.9999384369132268],[575,0.9999476713762429],[705,0.9999569058392588],[735,0.9999599839935974],[770,0.9999630621479361],[1215,0.9999661403022747],[1230,0.999973450918829],[1245,0.9999738356881214],[1255,0.999981531073968],[1285,0.9999823006125527],[1320,0.9999830701511374],[1375,0.9999846092283067],[1390,0.9999869178440607],[1425,0.9999926893834457],[1450,0.9999938436913227],[1615,0.9999949979991997],[1630,0.9999969218456614],[1665,0.999997691384246],[1675,0.9999980761535383],[4185,0.9999984609228306],[4410,0.9999996152307077]]};
+(function () {
+  var SUITS = ['♠︎', '♥︎', '♦︎', '♣︎'];
+  var SUIT_NAMES = ['Spades', 'Hearts', 'Diamonds', 'Clubs'];
+  var RANK_FULL = { 11: 'Jack', 12: 'Queen', 13: 'King', 14: 'Ace' };
+  var $ = function (id) { return document.getElementById(id); };
+  var store = {
+    get: function (k) { try { return JSON.parse(localStorage.getItem(k)); } catch (e) { return null; } },
+    set: function (k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+  };
+  var fmt = function (n) { return n.toLocaleString('en-US'); };
+
+  // Prototyp: "Tag" lässt sich vorspulen, damit man mehrere Hände ausprobieren kann
+  var offset = store.get('th-offset') || 0;
+  var now = new Date(Date.now() + offset * 864e5);
+  var dayKey = now.getFullYear() + '-' + (now.getMonth() + 1) + '-' + now.getDate();
+  $('date').textContent = now.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+
+  var seed = now.getFullYear() * 10000 + (now.getMonth() + 1) * 100 + now.getDate();
+  var dayCard = Math.imul(seed, 2654435761) >>> 0; dayCard = dayCard % 52;
+  var dr = TH.rankOf(dayCard);
+  $('daycard').textContent = (RANK_FULL[dr] || dr) + ' of ' + SUIT_NAMES[TH.suitOf(dayCard)] + ' ' + SUITS[TH.suitOf(dayCard)];
+
+  function cardHTML(id) {
+    var s = TH.suitOf(id), r = TH.rankLabel(TH.rankOf(id));
+    var cls = (s === 1 || s === 2 ? 'red' : 'black') + (id === dayCard ? ' daymark' : '');
+    var corner = r + '<br>' + SUITS[s];
+    return '<div class="card"><div class="back"></div><div class="face ' + cls + '"><div class="corner">' + corner +
+      '</div><div class="pip">' + SUITS[s] + '</div></div></div>';
+  }
+  function emptyHand() {
+    var h = '';
+    for (var i = 0; i < 5; i++) h += '<div class="slot"><div class="card"><div class="back"></div></div></div>';
+    $('hand').innerHTML = h;
+  }
+
+  function drawHand() {
+    var deck = [], out = [], buf = new Uint32Array(5);
+    for (var i = 0; i < 52; i++) deck.push(i);
+    crypto.getRandomValues(buf);
+    for (var j = 0; j < 5; j++) { var k = j + (buf[j] % (52 - j)); var t = deck[j]; deck[j] = deck[k]; deck[k] = t; out.push(deck[j]); }
+    return out;
+  }
+  function info(i) {
+    var a = TH.LIST[i], p = DATA.prob[a.id];
+    return { a: a, p: p, pts: TH.ptsOf(p), tier: TH.tierOf(p) };
+  }
+  function percentile(score) {
+    var lo = 0;
+    for (var i = 0; i < DATA.cdf.length; i++) if (DATA.cdf[i][0] === score) return DATA.cdf[i][1];
+    return lo;
+  }
+  function oneIn(p) {
+    var n = 1 / p;
+    if (n < 10) return '1 in ' + n.toFixed(1);
+    return '1 in ' + fmt(Math.round(n));
+  }
+  function pctText(x) {
+    var v = x * 100;
+    if (v >= 99.9) return v.toFixed(4);
+    if (v >= 99) return v.toFixed(2);
+    return v.toFixed(1);
+  }
+
+  function achRow(x, isNew) {
+    return '<div class="ach ' + x.tier.id + (isNew ? ' new' : '') + '" style="--tc:var(--t-' + x.tier.id + ')">' +
+      '<div class="bar"></div><div><div class="nm">' + x.a.name + '</div><div class="ds">' + x.a.desc + '</div></div>' +
+      '<div class="rt"><div class="tp">' + x.tier.name + '</div><div class="pp">+' + fmt(x.pts) + '</div><div class="od">' + oneIn(x.p) + '</div></div></div>';
+  }
+
+  function renderCollection() {
+    var coll = store.get('th-coll') || {}, have = 0, html = '', lastG = '';
+    // nach Seltenheit sortiert: von gewöhnlich bis legendär, je Stufe eine Überschrift
+    var order = TH.LIST.map(function (a, i) { return i; }).sort(function (a, b) { return DATA.prob[TH.LIST[b].id] - DATA.prob[TH.LIST[a].id]; });
+    order.forEach(function (i) {
+      var x = info(i), n = coll[x.a.id] || 0;
+      if (n) have++;
+      if (x.tier.id !== lastG) { if (lastG) html += '</div>'; html += '<div class="grp" style="color:var(--t-' + x.tier.id + ')">' + x.tier.name + '</div><div class="coll">'; lastG = x.tier.id; }
+      html += '<div class="ci' + (n ? '' : ' locked') + '" style="--tc:var(--t-' + x.tier.id + ')"><div class="nm">' + x.a.name +
+        '</div><div class="ds">' + x.a.desc + '</div><div class="ct">' + (n ? n + '× · ' : '') + x.tier.name + ' · ' + oneIn(x.p) + '</div></div>';
+    });
+    $('coll').innerHTML = html + '</div>';
+    $('collcount').textContent = have + ' of ' + TH.LIST.length;
+  }
+
+  function showResult(hand, animate) {
+    var hits = TH.hits(hand, dayCard).map(info).sort(function (a, b) { return a.pts - b.pts; });
+    var total = hits.reduce(function (s, x) { return s + x.pts; }, 0);
+    var slots = $('hand').children;
+    hand.forEach(function (id, i) { slots[i].innerHTML = cardHTML(id); });
+    var cards = $('hand').querySelectorAll('.card');
+    var ph = hits.filter(function (x) { return x.a.g === 'poker'; })[0];
+    // Jede Karte hebt sich erst an und wackelt (Spannung), dann dreht sie sich um; die letzte wackelt länger
+    cards.forEach(function (c, i) {
+      if (!animate) { c.classList.add('up'); return; }
+      var t = 600 + i * FLIP, td = i === 4 ? TEASE_LAST : TEASE;
+      setTimeout(function () {
+        if (REDUCE) { c.classList.add('up'); return; }
+        c.style.animationDuration = td + 'ms'; c.classList.add('reveal');
+      }, t);
+      // Endzustand von .up ist identisch mit dem letzten Schritt der Animation, daher kein Sprung
+      c.addEventListener('animationend', function () { c.classList.add('up'); c.classList.remove('reveal'); }, { once: true });
+    });
+    var nameAt = animate ? 600 + 4 * FLIP + TEASE_LAST + 900 : 0;
+    setTimeout(function () { $('handname').textContent = ph.a.name; $('handname').classList.add('on'); }, nameAt);
+    var after = animate ? nameAt + PAUSE : 0;
+
+    $('go').disabled = true;
+    setTimeout(function () {
+      $('score').style.display = 'block';
+      $('todaybox').style.display = 'block';
+      $('todaycount').textContent = hits.length + (hits.length === 1 ? ' achievement' : ' achievements');
+      $('pct').innerHTML = 'Better than <b>' + pctText(percentile(total)) + '%</b> of all possible hands';
+      var list = $('today'); list.innerHTML = '';
+      var shown = 0, step = animate ? STEP : 0;
+      hits.forEach(function (x, i) {
+        setTimeout(function () {
+          list.insertAdjacentHTML('afterbegin', achRow(x, animate));
+          countTo(shown, shown + x.pts, animate ? 700 : 0);
+          shown += x.pts;
+        }, i * step);
+      });
+      // Prozentwert und Teilen erst ganz am Ende, sonst verrät der Wert vorab, wie gut die Hand ist
+      setTimeout(function () {
+        $('pct').classList.add('on'); $('share').classList.add('on');
+        $('wait').style.display = 'block'; tick(); if (animate) renderCollection();
+      }, animate ? hits.length * step + 1000 : 0);
+      shareText = 'Daily Hand · ' + now.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + '\n' +
+        hand.map(function (id) { return TH.rankLabel(TH.rankOf(id)) + SUITS[TH.suitOf(id)]; }).join(' ') + '\n' +
+        fmt(total) + ' points · better than ' + pctText(percentile(total)) + '%\n' +
+        'Rarest: ' + hits[hits.length - 1].a.name + ' (' + oneIn(hits[hits.length - 1].p) + ')\n' + location.origin + location.pathname;
+    }, after);
+    return hits;
+  }
+
+  var shareText = '';
+  // Zeiten in ms: Abstand zwischen Karten, Wackeln vor dem Aufdecken, Pause nach dem Handnamen, Abstand zwischen Erfolgen
+  var FLIP = 2200, TEASE = 2000, TEASE_LAST = 3000, PAUSE = 2500, STEP = 1200;
+  var REDUCE = false;
+  try { REDUCE = matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) {}
+  var countTimer = null;
+  function countTo(from, to, ms) {
+    clearInterval(countTimer);
+    if (!ms) { $('pts').textContent = fmt(to); return; }
+    var t0 = Date.now();
+    countTimer = setInterval(function () {
+      var k = Math.min(1, (Date.now() - t0) / ms), e = 1 - Math.pow(1 - k, 3);
+      $('pts').textContent = fmt(Math.round(from + (to - from) * e));
+      if (k >= 1) clearInterval(countTimer);
+    }, 30);
+  }
+  function tick() {
+    var real = new Date(), next = new Date(real); next.setHours(24, 0, 0, 0);
+    var s = Math.max(0, Math.floor((next - real) / 1000));
+    var h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60), sec = s % 60;
+    $('wait').textContent = 'Next hand in ' + h + 'h ' + String(m).padStart(2, '0') + 'm ' + String(sec).padStart(2, '0') + 's';
+  }
+  setInterval(function () { if ($('wait').style.display === 'block') tick(); }, 1000);
+
+  emptyHand();
+  renderCollection();
+  var saved = store.get('th-day-' + dayKey);
+  if (saved) showResult(saved, false);
+
+  $('go').onclick = function () {
+    var hand = drawHand();
+    store.set('th-day-' + dayKey, hand);
+    var coll = store.get('th-coll') || {};
+    TH.hits(hand, dayCard).forEach(function (i) { var id = TH.LIST[i].id; coll[id] = (coll[id] || 0) + 1; });
+    store.set('th-coll', coll);
+    showResult(hand, true);
+  };
+  $('share').onclick = function () {
+    var done = function () { var t = $('toast'); t.textContent = 'Copied to clipboard'; t.classList.add('on'); setTimeout(function () { t.classList.remove('on'); }, 1600); };
+    try { navigator.clipboard.writeText(shareText).then(done, function () { fallback(); }); } catch (e) { fallback(); }
+  };
+  function fallback() { var t = $('toast'); t.textContent = shareText.split('\n').join(' · '); t.classList.add('on'); setTimeout(function () { t.classList.remove('on'); }, 5000); }
+  $('newday').onclick = function () { store.set('th-offset', offset + 1); location.reload(); };
+  $('wipe').onclick = function () {
+    try { Object.keys(localStorage).forEach(function (k) { if (k.indexOf('th-') === 0) localStorage.removeItem(k); }); } catch (e) {}
+    location.reload();
+  };
+})();
+</script>
+</body>
+</html>

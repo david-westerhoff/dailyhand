@@ -269,7 +269,10 @@ var DATA = /*DATA*/;
         c.style.animationDuration = td + 'ms'; c.classList.add('reveal');
       }, t);
       // Endzustand von .up ist identisch mit dem letzten Schritt der Animation, daher kein Sprung
-      c.addEventListener('animationend', function () { c.classList.add('up'); c.classList.remove('reveal'); }, { once: true });
+      var finish = function () { c.classList.add('up'); c.classList.remove('reveal'); };
+      c.addEventListener('animationend', finish, { once: true });
+      // Absicherung: läuft die Animation nicht (z. B. Fenster verdeckt), wird die Karte trotzdem aufgedeckt
+      setTimeout(finish, t + td + 400);
     });
     var nameAt = animate ? 600 + 4 * FLIP + TEASE_LAST + 900 : 0;
     setTimeout(function () { $('handname').textContent = ph.a.name; $('handname').classList.add('on'); }, nameAt);

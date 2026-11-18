@@ -26,7 +26,15 @@ for (const m of masks) {
 }
 const scores = [...hist.keys()].sort((x, y) => x - y);
 let below = 0;
-const cdf = scores.map(s => { const row = [s, below / total]; below += hist.get(s); return row; });
+// Verteilung ausgedünnt: ein Eintrag je 0,01 Prozentpunkte Anstieg, oben (ab 99,9 %) jeder Wert.
+// Jeder Eintrag [Punkte, Anteil der Hände mit weniger Punkten]; die Seite nimmt den letzten Eintrag ≤ eigener Punktzahl.
+const cdf = [];
+let lastKept = -1;
+for (const s of scores) {
+  const f = below / total;
+  if (f - lastKept >= 1e-4 || f >= 0.999) { cdf.push([s, Number(f.toPrecision(7))]); lastKept = f; }
+  below += hist.get(s);
+}
 const out = { total, prob: Object.fromEntries(TH.LIST.map((a, i) => [a.id, prob[i]])), cdf };
 fs.writeFileSync(__dirname + '/data.json', JSON.stringify(out));
 TH.LIST.forEach((a, i) => console.log(a.id.padEnd(14), (prob[i] * 100).toFixed(4).padStart(9) + ' %', TH.tierOf(prob[i]).name, '1 von ' + Math.round(1 / prob[i]).toLocaleString('de')));

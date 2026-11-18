@@ -225,9 +225,9 @@ var TH = (function () {
     { id: 'gewoehnlich', name: 'Common', max: 2, pts: 10 }
   ];
   function tierOf(p) { for (var i = 0; i < TIERS.length; i++) if (p < TIERS[i].max) return TIERS[i]; }
-  // Punkte genau aus der Seltenheit, ohne Runden auf Fünfer: 5 × √(1/p)
-  // 1 von 2 -> 7, 1 von 21 -> 23, 1 von 4 165 -> 323, 1 von 649 740 -> 4 030
-  function ptsOf(p) { return Math.max(1, Math.round(5 * Math.sqrt(1 / p))); }
+  // Punkte genau aus der Seltenheit: 500 × √(1/p), auf ganze Zahlen (Davids Wunsch: mal 100, zwei Stellen genauer)
+  // High Card -> 706, Two Pair -> 2 293, Four of a Kind -> 32 268, Royal Flush -> 403 032
+  function ptsOf(p) { return Math.max(1, Math.round(500 * Math.sqrt(1 / p))); }
 
   // Gibt Indizes der erreichten Erfolge zurück; Meta-Erfolge zählen die übrigen
   function hits(ids, dayCard) {

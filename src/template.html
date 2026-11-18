@@ -243,10 +243,11 @@ var DATA = /*DATA*/;
     var a = TH.LIST[i], p = DATA.prob[a.id];
     return { a: a, p: p, pts: TH.ptsOf(p), tier: TH.tierOf(p) };
   }
+  // Anteil der Hände mit weniger Punkten: letzter Eintrag der (ausgedünnten) Verteilung, dessen Punkte ≤ score sind
   function percentile(score) {
-    var lo = 0;
-    for (var i = 0; i < DATA.cdf.length; i++) if (DATA.cdf[i][0] === score) return DATA.cdf[i][1];
-    return lo;
+    var c = DATA.cdf, lo = 0, hi = c.length - 1, ans = 0;
+    while (lo <= hi) { var mid = (lo + hi) >> 1; if (c[mid][0] <= score) { ans = c[mid][1]; lo = mid + 1; } else hi = mid - 1; }
+    return ans;
   }
   function oneIn(p) {
     var n = 1 / p;

@@ -660,11 +660,11 @@ var DATA = {"total":2598960,"prob":{"luft":0.5011773940345369,"paar":0.422569027
   var FLIP = 2200, TEASE = 2000, TEASE_LAST = 3000, PAUSE = 1200, STEP = 1100;
   var REDUCE = false;
   try { REDUCE = matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) {}
-  // Sanftes Gleiten, langsamer als das eingebaute smooth-Scrollen; der Kartentisch bleibt oben noch angeschnitten sichtbar
+  // Sanftes Gleiten, langsamer als das eingebaute smooth-Scrollen; die Punktzahl kommt ganz nach oben, darunter haben die Erfolge Platz (Davids Wunsch, 18.11.2026)
   var GLIDE = 800;
   function glideTo(el) {
     var start = window.pageYOffset;
-    var target = Math.max(0, el.getBoundingClientRect().top + start - 140);
+    var target = Math.max(0, el.getBoundingClientRect().top + start - 12);
     var maxY = document.documentElement.scrollHeight - window.innerHeight;
     target = Math.min(target, Math.max(0, maxY + 400)); // Liste wächst noch, daher etwas Spielraum
     if (REDUCE || Math.abs(target - start) < 4) { window.scrollTo(0, target); return; }

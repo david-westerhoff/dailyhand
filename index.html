@@ -404,6 +404,9 @@ var DATA = {"total":2598960,"prob":{"luft":0.5011773940345369,"paar":0.422569027
     setTimeout(function () {
       $('score').style.display = 'block';
       $('todaybox').style.display = 'block';
+      // Seite gleitet nach oben, damit Punkte und einfliegende Erfolge im Bild sind (wie bei RNGdle)
+      var wait0 = 0;
+      if (animate) { glideTo($('score')); wait0 = GLIDE + 200; }
       $('todaycount').textContent = hits.length + (hits.length === 1 ? ' achievement' : ' achievements');
       $('pct').innerHTML = 'Better than <b>' + pctText(percentile(total)) + '%</b> of all possible hands';
       var list = $('today'); list.innerHTML = '';
@@ -413,13 +416,13 @@ var DATA = {"total":2598960,"prob":{"luft":0.5011773940345369,"paar":0.422569027
           list.insertAdjacentHTML('afterbegin', achRow(x, animate));
           countTo(shown, shown + x.pts, animate ? 700 : 0);
           shown += x.pts;
-        }, i * step);
+        }, wait0 + i * step);
       });
       // Prozentwert und Teilen erst ganz am Ende, sonst verrät der Wert vorab, wie gut die Hand ist
       setTimeout(function () {
         $('pct').classList.add('on'); $('share').classList.add('on');
         $('wait').style.display = 'block'; tick(); if (animate) renderCollection();
-      }, animate ? hits.length * step + 1000 : 0);
+      }, animate ? wait0 + hits.length * step + 1000 : 0);
       shareText = 'Daily Hand · ' + now.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + '\n' +
         hand.map(function (id) { return TH.rankLabel(TH.rankOf(id)) + SUITS[TH.suitOf(id)]; }).join(' ') + '\n' +
         fmt(total) + ' points · better than ' + pctText(percentile(total)) + '%\n' +
@@ -433,6 +436,21 @@ var DATA = {"total":2598960,"prob":{"luft":0.5011773940345369,"paar":0.422569027
   var FLIP = 2200, TEASE = 2000, TEASE_LAST = 3000, PAUSE = 2500, STEP = 1200;
   var REDUCE = false;
   try { REDUCE = matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) {}
+  // Sanftes Gleiten, langsamer als das eingebaute smooth-Scrollen; der Kartentisch bleibt oben noch angeschnitten sichtbar
+  var GLIDE = 1100;
+  function glideTo(el) {
+    var start = window.pageYOffset;
+    var target = Math.max(0, el.getBoundingClientRect().top + start - 140);
+    var maxY = document.documentElement.scrollHeight - window.innerHeight;
+    target = Math.min(target, Math.max(0, maxY + 400)); // Liste wächst noch, daher etwas Spielraum
+    if (REDUCE || Math.abs(target - start) < 4) { window.scrollTo(0, target); return; }
+    var t0 = performance.now();
+    (function step(now) {
+      var k = Math.min(1, (now - t0) / GLIDE), e = k < .5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2;
+      window.scrollTo(0, start + (target - start) * e);
+      if (k < 1) requestAnimationFrame(step);
+    })(t0);
+  }
   var countTimer = null;
   function countTo(from, to, ms) {
     clearInterval(countTimer);

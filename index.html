@@ -162,7 +162,7 @@ a:focus-visible, button:focus-visible, summary:focus-visible { outline: 2px soli
 </head>
 <body>
 <main>
-  <header><h1>Daily Hand</h1><span class="date" id="date"></span></header>
+  <header><h1><span id="egg">D</span>aily Hand</h1><span class="date" id="date"></span></header>
   <p class="tagline">Five cards, once a day. How lucky are you?</p>
   <div class="proto">Test version: “New day” lets you try more hands right away.
     <button id="newday">New day</button><button id="wipe">Reset collection</button></div>
@@ -513,10 +513,11 @@ var DATA = {"total":2598960,"prob":{"luft":0.5011773940345369,"paar":0.422569027
     return '1 in ' + fmt(Math.round(n));
   }
   function pctText(x) {
-    var v = x * 100;
-    if (v >= 99.9) return v.toFixed(4);
-    if (v >= 99) return v.toFixed(2);
-    return v.toFixed(1);
+    // abrunden, damit nie „100 %" erscheint (auch die beste Hand ist nur besser als fast alle)
+    var v = x * 100, down = function (d) { var f = Math.pow(10, d); return (Math.floor(v * f) / f).toFixed(d); };
+    if (v >= 99.9) return down(4);
+    if (v >= 99) return down(2);
+    return down(1);
   }
 
   // Abzeichen je Erfolg (Text und Kartensymbole, keine Emojis)
@@ -589,9 +590,9 @@ var DATA = {"total":2598960,"prob":{"luft":0.5011773940345369,"paar":0.422569027
     $('collcount').textContent = have + ' of ' + TH.LIST.length;
   }
 
-  function showResult(hand, animate) {
+  function showResult(hand, animate, firstsOverride) {
     var hits = TH.hits(hand, dayCard).map(info).sort(function (a, b) { return a.pts - b.pts; });
-    var firsts = store.get('th-new-' + dayKey) || []; // heute zum ersten Mal erreichte Erfolge
+    var firsts = firstsOverride || store.get('th-new-' + dayKey) || []; // heute zum ersten Mal erreichte Erfolge
     var total = hits.reduce(function (s, x) { return s + x.pts; }, 0);
     var slots = $('hand').children;
     hand.forEach(function (id, i) { slots[i].innerHTML = cardHTML(id); });
@@ -717,6 +718,22 @@ var DATA = {"total":2598960,"prob":{"luft":0.5011773940345369,"paar":0.422569027
     store.set('th-coll', coll);
     store.set('th-new-' + dayKey, firsts);
     showResult(hand, true);
+  };
+
+  // Easter Egg für David als Entwickler: Klick auf das „D“ im Logo teilt einmal die beste mögliche Hand aus
+  // (Royal Flush in Pik, Pik-Ass als Karte des Tages). Spielstand und Sammlung bleiben unverändert; Neuladen stellt alles wieder her.
+  $('egg').onclick = function () {
+    var best = [10, 11, 12, 13, 14].map(function (r) { return TH.cardId(r, 0); });
+    dayCard = TH.cardId(14, 0);
+    $('daycard').textContent = 'Ace of Spades ' + SUITS[0];
+    var coll = store.get('th-coll') || {};
+    var firsts = TH.hits(best, dayCard).map(function (i) { return TH.LIST[i].id; }).filter(function (id) { return !coll[id]; });
+    emptyHand();
+    $('handname').classList.remove('on'); $('handname').textContent = '';
+    $('score').style.display = 'none'; $('todaybox').style.display = 'none'; $('today').innerHTML = '';
+    $('pct').classList.remove('on'); $('share').classList.remove('on'); $('wait').style.display = 'none';
+    window.scrollTo(0, 0);
+    showResult(best, true, firsts);
   };
   $('share').onclick = function () {
     var done = function () { var t = $('toast'); t.textContent = 'Copied to clipboard'; t.classList.add('on'); setTimeout(function () { t.classList.remove('on'); }, 1600); };

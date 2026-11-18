@@ -107,6 +107,9 @@ h2 span { font: 400 14px "Bricolage Grotesque", sans-serif; color: var(--muted);
 @keyframes spinin { 0% { transform: rotate(-160deg) scale(.3); } 100% { transform: none; } }
 @keyframes pop { 0% { transform: scale(.4); opacity: 0; } 100% { transform: none; opacity: 1; } }
 .ach.new { animation: flyin 1s cubic-bezier(.18,.9,.3,1) both; }
+/* Seltene Erfolge fliegen langsamer ein */
+.ach.selten.new { animation-duration: 1.3s; } .ach.episch.new { animation-duration: 1.6s; } .ach.legendaer.new { animation-duration: 2s; }
+.ach.selten.new .badge, .ach.episch.new .badge { animation-duration: 1.3s; } .ach.legendaer.new .badge { animation-duration: 1.7s; }
 @keyframes flyin {
   0% { opacity: 0; transform: translate(120%, -40px) rotate(8deg) scale(.85); }
   60% { opacity: 1; transform: translate(-4%, 4px) rotate(-1.5deg) scale(1.02); }
@@ -369,21 +372,24 @@ var DATA = /*DATA*/;
       $('todaycount').textContent = hits.length + (hits.length === 1 ? ' achievement' : ' achievements');
       $('pct').innerHTML = 'Better than <b>' + pctText(percentile(total)) + '%</b> of all possible hands';
       var list = $('today'); list.innerHTML = '';
-      // Viele Erfolge fliegen schneller nacheinander ein, damit die Liste insgesamt nicht ewig dauert
-      var shown = 0, step = animate ? Math.max(450, Math.min(STEP, Math.round(6500 / hits.length))) : 0;
+      // Abstand vor jedem Erfolg nach seiner Seltenheit: Gewöhnliches kommt zügig, Seltenes bekommt Bühne
+      var GAP = { gewoehnlich: 650, ungewoehnlich: 950, selten: 1500, episch: 2000, legendaer: 2700 };
+      var shown = 0, at = [], acc = wait0;
+      hits.forEach(function (x, i) { if (i > 0) acc += animate ? GAP[x.tier.id] : 0; at.push(acc); });
+      var endAt = animate ? acc + GAP[hits[hits.length - 1].tier.id] : 0;
       hits.forEach(function (x, i) {
         setTimeout(function () {
           list.insertAdjacentHTML('afterbegin', achRow(x, animate));
           if (animate) { var row = list.firstElementChild; setTimeout(function () { burst(row.querySelector('.badge'), x); }, 650); }
           countTo(shown, shown + x.pts, animate ? 700 : 0);
           shown += x.pts;
-        }, wait0 + i * step);
+        }, at[i]);
       });
       // Prozentwert und Teilen erst ganz am Ende, sonst verrät der Wert vorab, wie gut die Hand ist
       setTimeout(function () {
         $('pct').classList.add('on'); $('share').classList.add('on');
         $('wait').style.display = 'block'; tick(); if (animate) renderCollection();
-      }, animate ? wait0 + hits.length * step + 1000 : 0);
+      }, animate ? endAt + 600 : 0);
       shareText = 'Daily Hand · ' + now.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + '\n' +
         hand.map(function (id) { return TH.rankLabel(TH.rankOf(id)) + SUITS[TH.suitOf(id)]; }).join(' ') + '\n' +
         fmt(total) + ' points · better than ' + pctText(percentile(total)) + '%\n' +

@@ -264,9 +264,19 @@ var DATA = /*DATA*/;
   var S = { s: '♠︎', h: '♥︎', d: '♦︎', c: '♣︎' };
   var ICON = { luft: 'Hi', paar: '2×', zweipaare: '2+2', drilling: '3×', strasse: '5→', flush: S.d + S.d, fullhouse: '3+2',
     vierling: '4×', sflush: S.s + '→', royal: 'AKQ', rot: S.h + S.d, schwarz: S.s + S.c, vierfarben: S.s + S.h + S.d + S.c,
-    fastflush: S.h + '4', liebesbrief: S.h, hofstaat: 'JQK', nurbilder: 'K', ehepaar: 'K' + S.h + 'Q', volk: '2–10', einass: 'A',
+    fastflush: S.h + '4', liebesbrief: S.h, hofstaat: 'JQK', nurbilder: 'K', ehepaar: 'KQ', volk: '2–10', einass: 'A',
     asse: 'AA', faststrasse: '4→', treppe: '3→', gerade: '2·4', ungerade: '1·3', primzahlen: '7·11', klein: '≤5',
-    hoch: '10+', einundzwanzig: '21', tageskarte: '★︎', sieben: '777', teufel: '666', pech: '7…2', deadman: 'A8' };
+    hoch: '10+', einundzwanzig: '21', tageskarte: '★︎', sieben: '777', teufel: '666', pech: '7…2', deadman: 'A8',
+    diamonds5: S.d + '5', spades5: S.s + '5', clubs5: S.c + '5', twotone: 'II', tricolor: 'III', heartless: '0' + S.h, oddone: '4+1',
+    suitup: '3' + S.c, suitedconn: '8' + S.c + '9', twins: '=' + S.d, acespades: 'A' + S.s, queenspades: 'Q' + S.s, suicideking: 'K' + S.h,
+    oneeyed: 'JJ', truelove: 'KQ' + S.h, blackjack2: 'A' + S.s + 'J', family: 'JQK' + S.d, sevendeuce: '72',
+    ducks: '22', crabs: '33', sailboats: '44', presto: '55', route66: '66', sticks: '77', snowmen: '88', dimes: '1010', hooks: 'JJ',
+    ladies: 'QQ', cowboys: 'KK', bigslick: 'AK', highslows: 'A2', threeaces: 'AAA', fouraces: '4A', fourkings: '4K', wedding: 'KQ×2',
+    acesandeights: 'A+8', twofaces: 'JQ', singledigits: '2–9', lowtide: 'A–7', middle: '6–9', doubledigits: '10–K',
+    spread: '↔︎', gutshot: '5_7', acehigh: 'A!', wheel: 'A–5', broadway: '10–A', steelwheel: 'A5' + S.s, rainbowroad: '→4',
+    acesfull: 'AAA+', palace: 'KKQ', humbleflush: S.c + '≤8', courtcase: 'JJQQ', almostroyal: 'AKQJ',
+    evensum: 'Σ·2', primesum: 'Σp', squaresum: 'Σ²', bakers: '13', answer: '42', halfcentury: '50', rockbottom: '6',
+    maxedout: '64', fibonacci: '1235', squares: '149', threes: '369', overachiever: '13+', bare: '…' };
   function badge(x, show) { return '<div class="badge">' + (show ? ICON[x.a.id] : '?') + '</div>'; }
   function tierColor(id) { try { return getComputedStyle(document.documentElement).getPropertyValue('--t-' + id).trim() || '#fff'; } catch (e) { return '#fff'; } }
 
@@ -358,7 +368,8 @@ var DATA = /*DATA*/;
       $('todaycount').textContent = hits.length + (hits.length === 1 ? ' achievement' : ' achievements');
       $('pct').innerHTML = 'Better than <b>' + pctText(percentile(total)) + '%</b> of all possible hands';
       var list = $('today'); list.innerHTML = '';
-      var shown = 0, step = animate ? STEP : 0;
+      // Viele Erfolge fliegen schneller nacheinander ein, damit die Liste insgesamt nicht ewig dauert
+      var shown = 0, step = animate ? Math.max(450, Math.min(STEP, Math.round(6500 / hits.length))) : 0;
       hits.forEach(function (x, i) {
         setTimeout(function () {
           list.insertAdjacentHTML('afterbegin', achRow(x, animate));

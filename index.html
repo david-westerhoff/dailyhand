@@ -60,7 +60,7 @@ h1 { font: 800 30px/1 "Fraunces", Georgia, serif; margin: 0; letter-spacing: -0.
   90%  { transform: translateY(2px) rotate(0deg) rotateY(184deg) scale(1); animation-timing-function: ease-in-out; }
   100% { transform: translateY(0) rotate(0deg) rotateY(180deg) scale(1); }
 }
-.handname { text-align: center; margin-top: 16px; font: 800 26px/1.1 "Fraunces", serif; color: #fff; text-shadow: 0 0 14px var(--hc), 0 0 2px var(--hc); opacity: 0; transform: scale(.7); transition: opacity .6s, transform .8s cubic-bezier(.2,1.5,.4,1); min-height: 29px; }
+.handname { text-align: center; margin-top: 16px; font: 800 26px/1.1 "Fraunces", serif; color: #fff; text-shadow: 0 0 14px var(--hc), 0 0 2px var(--hc); opacity: 0; transform: scale(.7); transition: opacity .6s, transform .8s cubic-bezier(.2,1.5,.4,1), text-shadow .8s; min-height: 29px; }
 .handname.on { opacity: 1; transform: none; }
 .face, .back { position: absolute; inset: 0; border-radius: 9px; backface-visibility: hidden; }
 .back { background: repeating-linear-gradient(45deg, #2c6b58 0 6px, #245a4a 6px 12px); border: 3px solid #f1ead8; box-shadow: 0 4px 10px -4px rgba(0,0,0,.5); }
@@ -78,7 +78,7 @@ h1 { font: 800 30px/1 "Fraunces", Georgia, serif; margin: 0; letter-spacing: -0.
 .wait { text-align: center; color: #e9e2cf; font-size: 14px; margin-top: 16px; display: none; }
 
 .score { margin-top: 18px; display: none; text-align: center; }
-.score .pts { color: var(--hc); font: 800 56px/1 "Fraunces", serif; letter-spacing: 0; font-variant-numeric: tabular-nums; }
+.score .pts { color: var(--hc); transition: color .5s; font: 800 56px/1 "Fraunces", serif; letter-spacing: 0; font-variant-numeric: tabular-nums; }
 .score .pts .dg { display: inline-block; width: .64em; text-align: center; }
 .score .pts .sep { display: inline-block; width: .26em; text-align: center; }
 .score .pts small { font-size: 18px; font-weight: 600; color: var(--muted); margin-left: 4px; letter-spacing: 0; }
@@ -612,10 +612,12 @@ var DATA = {"total":2598960,"prob":{"luft":0.5011773940345369,"paar":0.422569027
       setTimeout(finish, t + td + 400);
     });
     var nameAt = animate ? 600 + 4 * FLIP + TEASE_LAST + 300 : 0;
-    // Handname und Punkte in der Farbe des seltensten Erfolgs
+    // Kein Spoiler: Handname und Punktzahl starten neutral; die Punktzahl nimmt mit jedem Erfolg dessen Farbe an,
+    // erst am Ende leuchten beide in der Farbe des seltensten Erfolgs
     var best = hits[hits.length - 1].tier.id;
-    $('handname').style.setProperty('--hc', 'var(--t-' + best + ')');
-    $('score').style.setProperty('--hc', 'var(--t-' + best + ')');
+    function paint(id) { $('score').style.setProperty('--hc', id ? 'var(--t-' + id + ')' : 'var(--ink)'); }
+    $('handname').style.setProperty('--hc', animate ? 'rgba(255, 255, 255, .45)' : 'var(--t-' + best + ')');
+    paint(animate ? null : best);
     setTimeout(function () { $('handname').textContent = ph.a.name; $('handname').classList.add('on'); }, nameAt);
     var after = animate ? nameAt + PAUSE : 0;
 
@@ -638,6 +640,7 @@ var DATA = {"total":2598960,"prob":{"luft":0.5011773940345369,"paar":0.422569027
         setTimeout(function () {
           list.insertAdjacentHTML('afterbegin', achRow(x, animate, firsts.indexOf(x.a.id) >= 0));
           if (animate) { var row = list.firstElementChild; setTimeout(function () { burst(row.querySelector('.badge'), x); }, 650); }
+          if (animate) paint(x.tier.id);
           countTo(shown, shown + x.pts, animate ? 700 : 0);
           shown += x.pts;
         }, at[i]);
@@ -645,6 +648,7 @@ var DATA = {"total":2598960,"prob":{"luft":0.5011773940345369,"paar":0.422569027
       // Prozentwert und Teilen erst ganz am Ende, sonst verrät der Wert vorab, wie gut die Hand ist
       setTimeout(function () {
         $('pct').classList.add('on'); $('share').classList.add('on');
+        $('handname').style.setProperty('--hc', 'var(--t-' + best + ')');
         $('wait').style.display = 'block'; tick(); if (animate) renderCollection();
       }, animate ? endAt + 600 : 0);
       shareText = 'Daily Hand · ' + now.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + '\n' +

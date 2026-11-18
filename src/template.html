@@ -88,13 +88,20 @@ h1 { font: 800 30px/1 "Fraunces", Georgia, serif; margin: 0; letter-spacing: -0.
 
 h2 { font: 800 20px "Fraunces", serif; margin: 30px 0 10px; display: flex; justify-content: space-between; align-items: baseline; }
 h2 span { font: 400 14px "Bricolage Grotesque", sans-serif; color: var(--muted); }
-/* Erfolge: Seltenheitsfarbe (--tc) für Tönung, Rand und Punkte, Gruppenfarbe (--gc) im Abzeichen */
+/* Erfolge: alles in der Farbe der Seltenheit (--tc). Stärke je Stufe: --mix (Tönung), --edge (Rand), --glow (Leuchten) */
+.gewoehnlich { --mix: 0%; --edge: 0%; --glow: transparent; }
+.ungewoehnlich { --mix: 14%; --edge: 45%; --glow: transparent; }
+.selten { --mix: 24%; --edge: 75%; --glow: color-mix(in srgb, var(--tc) 55%, transparent); }
+.episch { --mix: 32%; --edge: 90%; --glow: color-mix(in srgb, var(--tc) 75%, transparent); }
+.legendaer { --mix: 36%; --edge: 100%; --glow: var(--tc); }
 .ach { position: relative; display: grid; grid-template-columns: 46px 1fr auto; gap: 12px; align-items: center; padding: 10px 12px; border-radius: 14px; margin-bottom: 10px; overflow: hidden;
-  background: linear-gradient(100deg, color-mix(in srgb, var(--gc) 26%, var(--surface)) 0%, color-mix(in srgb, var(--tc) 10%, var(--surface)) 80%);
-  border: 1.5px solid color-mix(in srgb, var(--gc) 60%, transparent); box-shadow: 0 6px 18px -12px var(--gc); }
+  background: linear-gradient(100deg, color-mix(in srgb, var(--tc) var(--mix), var(--surface)) 0%, var(--surface) 80%);
+  border: 1.5px solid color-mix(in srgb, var(--tc) var(--edge), var(--line)); box-shadow: 0 0 22px -8px var(--glow); }
+.ach.gewoehnlich .nm { font-weight: 600; }
 .ach .tx { min-width: 0; }
 .badge { width: 46px; height: 46px; border-radius: 12px; display: grid; place-items: center; font: 800 15px/1 "Fraunces", serif; letter-spacing: -.02em; color: #fff; white-space: nowrap;
-  background: linear-gradient(140deg, var(--gc), var(--tc)); box-shadow: inset 0 1px 0 rgba(255,255,255,.35), inset 0 -2px 0 rgba(0,0,0,.18), 0 4px 12px -6px var(--tc); text-shadow: 0 1px 2px rgba(0,0,0,.35); }
+  background: linear-gradient(140deg, color-mix(in srgb, var(--tc) 65%, #fff), var(--tc) 60%, color-mix(in srgb, var(--tc) 80%, #000)); box-shadow: inset 0 1px 0 rgba(255,255,255,.35), inset 0 -2px 0 rgba(0,0,0,.18), 0 0 14px -4px var(--glow); text-shadow: 0 1px 2px rgba(0,0,0,.35); }
+.gewoehnlich .badge { background: var(--line); color: var(--muted); text-shadow: none; box-shadow: none; }
 .ach.new .badge { animation: spinin .9s cubic-bezier(.2,1.4,.4,1) both; }
 .ach.new .pp { animation: pop .5s .5s cubic-bezier(.2,1.8,.4,1) both; }
 @keyframes spinin { 0% { transform: rotate(-160deg) scale(.3); } 100% { transform: none; } }
@@ -111,7 +118,8 @@ h2 span { font: 400 14px "Bricolage Grotesque", sans-serif; color: var(--muted);
 .ach .ds { font-size: 13px; color: var(--muted); }
 .ach .rt { text-align: right; white-space: nowrap; display: grid; justify-items: end; gap: 2px; }
 .ach .tp { font-size: 11px; font-weight: 700; color: var(--tc); text-transform: uppercase; letter-spacing: .05em; padding: 1px 8px; border-radius: 999px; background: color-mix(in srgb, var(--tc) 15%, transparent); }
-.ach .pp { font: 800 19px "Fraunces", serif; font-variant-numeric: tabular-nums; color: var(--gc); }
+.ach .pp { font: 800 19px "Fraunces", serif; font-variant-numeric: tabular-nums; color: var(--tc); }
+.ach.gewoehnlich .pp { color: var(--muted); font-size: 17px; }
 .ach .od { font-size: 12px; color: var(--muted); }
 /* Legendär: ruhiger Farbverlaufsrand, ein langsamer Glanz alle paar Sekunden */
 .ach.legendaer { border: 2px solid transparent; box-shadow: 0 8px 26px -10px var(--tc);
@@ -123,7 +131,7 @@ h2 span { font: 400 14px "Bricolage Grotesque", sans-serif; color: var(--muted);
 
 .coll { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
 .ci { display: grid; grid-template-columns: 34px 1fr; gap: 4px 10px; align-items: start; border-radius: 12px; padding: 9px 10px;
-  background: linear-gradient(140deg, color-mix(in srgb, var(--gc) 22%, var(--surface)), var(--surface) 75%); border: 1px solid color-mix(in srgb, var(--gc) 55%, transparent); }
+  background: linear-gradient(140deg, color-mix(in srgb, var(--tc) var(--mix), var(--surface)), var(--surface) 75%); border: 1px solid color-mix(in srgb, var(--tc) var(--edge), var(--line)); box-shadow: 0 0 16px -8px var(--glow); }
 .ci > div { min-width: 0; }
 .ci .badge { width: 34px; height: 34px; border-radius: 9px; font-size: 11px; }
 .ci .nm { font-weight: 700; font-size: 14px; }
@@ -252,15 +260,14 @@ var DATA = /*DATA*/;
     return v.toFixed(1);
   }
 
-  // Abzeichen je Erfolg (Text und Kartensymbole, keine Emojis) und eine Farbe je Gruppe
+  // Abzeichen je Erfolg (Text und Kartensymbole, keine Emojis)
   var S = { s: '♠︎', h: '♥︎', d: '♦︎', c: '♣︎' };
   var ICON = { luft: 'Hi', paar: '2×', zweipaare: '2+2', drilling: '3×', strasse: '5→', flush: S.d + S.d, fullhouse: '3+2',
     vierling: '4×', sflush: S.s + '→', royal: 'AKQ', rot: S.h + S.d, schwarz: S.s + S.c, vierfarben: S.s + S.h + S.d + S.c,
     fastflush: S.h + '4', liebesbrief: S.h, hofstaat: 'JQK', nurbilder: 'K', ehepaar: 'K' + S.h + 'Q', volk: '2–10', einass: 'A',
     asse: 'AA', faststrasse: '4→', treppe: '3→', gerade: '2·4', ungerade: '1·3', primzahlen: '7·11', klein: '≤5',
     hoch: '10+', einundzwanzig: '21', tageskarte: '★︎', sieben: '777', teufel: '666', pech: '7…2', deadman: 'A8' };
-  var GC = { poker: '#ff7a45', farben: '#ff4d7e', bilder: '#f5b82e', zahlen: '#1fc8e0', besonders: '#9a6bff' };
-  function badge(x, show) { return '<div class="badge" style="--gc:' + GC[x.a.g] + '">' + (show ? ICON[x.a.id] : '?') + '</div>'; }
+  function badge(x, show) { return '<div class="badge">' + (show ? ICON[x.a.id] : '?') + '</div>'; }
   function tierColor(id) { try { return getComputedStyle(document.documentElement).getPropertyValue('--t-' + id).trim() || '#fff'; } catch (e) { return '#fff'; } }
 
   // Kleines Konfetti nur für seltene Erfolge, vom Abzeichen aus; kein Flackern
@@ -272,7 +279,7 @@ var DATA = /*DATA*/;
     var dpr = window.devicePixelRatio || 1;
     if (fx.width !== innerWidth * dpr) { fx.width = innerWidth * dpr; fx.height = innerHeight * dpr; }
     var r = el.getBoundingClientRect(), cx = r.left + r.width / 2, cy = r.top + r.height / 2;
-    var cols = [tierColor(x.tier.id), GC[x.a.g], '#ffffff'];
+    var cols = [tierColor(x.tier.id), tierColor(x.tier.id), '#ffffff'];
     for (var i = 0; i < n; i++) {
       var a = Math.random() * Math.PI * 2, v = 2 + Math.random() * (x.tier.id === 'legendaer' ? 7 : 4.5);
       parts.push({ x: cx, y: cy, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 2, life: 1, s: 3 + Math.random() * 4, c: cols[i % 3], r: Math.random() * 6 });
@@ -292,7 +299,7 @@ var DATA = /*DATA*/;
   }
 
   function achRow(x, isNew) {
-    return '<div class="ach ' + x.tier.id + (isNew ? ' new' : '') + '" style="--tc:var(--t-' + x.tier.id + ');--gc:' + GC[x.a.g] + '">' +
+    return '<div class="ach ' + x.tier.id + (isNew ? ' new' : '') + '" style="--tc:var(--t-' + x.tier.id + ')">' +
       badge(x, true) + '<div class="tx"><div class="nm">' + x.a.name + '</div><div class="ds">' + x.a.desc + '</div></div>' +
       '<div class="rt"><div class="tp">' + x.tier.name + '</div><div class="pp">+' + fmt(x.pts) + '</div><div class="od">' + oneIn(x.p) + '</div></div></div>';
   }
@@ -305,7 +312,7 @@ var DATA = /*DATA*/;
       var x = info(i), n = coll[x.a.id] || 0;
       if (n) have++;
       if (x.tier.id !== lastG) { if (lastG) html += '</div>'; html += '<div class="grp" style="color:var(--t-' + x.tier.id + ')">' + x.tier.name + '</div><div class="coll">'; lastG = x.tier.id; }
-      html += '<div class="ci' + (n ? '' : ' locked') + '" style="--tc:var(--t-' + x.tier.id + ');--gc:' + GC[x.a.g] + '">' + badge(x, n) + '<div><div class="nm">' + x.a.name +
+      html += '<div class="ci ' + x.tier.id + (n ? '' : ' locked') + '" style="--tc:var(--t-' + x.tier.id + ')">' + badge(x, n) + '<div><div class="nm">' + x.a.name +
         '</div><div class="ds">' + x.a.desc + '</div></div><div class="ct">' + (n ? n + '× · ' : '') + x.tier.name + ' · ' + oneIn(x.p) + '</div></div>';
     });
     $('coll').innerHTML = html + '</div>';

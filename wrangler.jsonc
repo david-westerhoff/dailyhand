@@ -13,8 +13,8 @@
     {
       "binding": "DB",
       "database_name": "dailyhand",
-      // wird nach `wrangler d1 create dailyhand` durch die echte ID ersetzt
-      "database_id": "00000000-0000-0000-0000-000000000000",
+      // angelegt 24.11.2026 in Westeuropa (--location weur)
+      "database_id": "e834938e-cad9-4636-a6ef-13f68aa2a57a",
       "migrations_dir": "migrations"
     }
   ],

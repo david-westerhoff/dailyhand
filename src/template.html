@@ -175,7 +175,7 @@ a:focus-visible, button:focus-visible, summary:focus-visible { outline: 2px soli
 </head>
 <body>
 <main>
-  <header><h1><span id="egg">D</span>aily Hand</h1><span class="date" id="date"></span></header>
+  <header><h1>Daily Hand</h1><span class="date" id="date"></span></header>
   <p class="tagline">Five cards, once a day. How lucky are you?</p>
   <div class="acct" id="acct" hidden>
     <div class="row" id="acctGuest"><span>Sign in to keep your collection on every device.</span><button type="button" id="signin">Sign in</button></div>
@@ -541,20 +541,6 @@ var DATA = /*DATA*/;
     api('account/delete', {}).then(function () { location.reload(); }, function (e) { toast(e.message); });
   };
 
-  // Easter Egg für David als Entwickler: Klick auf das „D“ im Logo teilt einmal die beste mögliche Hand aus
-  // (Royal Flush in Pik, Pik-Ass als Karte des Tages). Spielstand und Sammlung bleiben unverändert; Neuladen stellt alles wieder her.
-  $('egg').onclick = function () {
-    var best = [10, 11, 12, 13, 14].map(function (r) { return TH.cardId(r, 0); });
-    dayCard = TH.cardId(14, 0);
-    $('daycard').textContent = 'Ace of Spades ' + SUITS[0];
-    var firsts = TH.hits(best, dayCard).map(function (i) { return TH.LIST[i].id; }).filter(function (id) { return !coll[id]; });
-    emptyHand();
-    $('handname').classList.remove('on'); $('handname').textContent = '';
-    $('score').style.display = 'none'; $('todaybox').style.display = 'none'; $('today').innerHTML = '';
-    $('pct').classList.remove('on'); $('share').classList.remove('on'); $('wait').style.display = 'none';
-    window.scrollTo(0, 0);
-    showResult(best, true, firsts);
-  };
   $('share').onclick = function () {
     var done = function () { toast('Copied to clipboard', 1600); };
     try { navigator.clipboard.writeText(shareText).then(done, function () { fallback(); }); } catch (e) { fallback(); }

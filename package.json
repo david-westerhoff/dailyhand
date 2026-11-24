@@ -1,0 +1,16 @@
+{
+  "name": "dailyhand",
+  "private": true,
+  "description": "Five cards, once a day. Draw your hand, unlock achievements and fill your collection.",
+  "scripts": {
+    "build": "node src/build.js",
+    "db:local": "wrangler d1 migrations apply dailyhand --local",
+    "db:remote": "wrangler d1 migrations apply dailyhand --remote",
+    "dev": "node src/build.js && wrangler dev --port 8787",
+    "deploy": "node src/build.js && wrangler deploy",
+    "test": "node --test \"test/*.test.mjs\""
+  },
+  "devDependencies": {
+    "wrangler": "4.168.0"
+  }
+}

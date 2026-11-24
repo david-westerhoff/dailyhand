@@ -36,8 +36,21 @@ header { display: flex; flex-wrap: wrap; align-items: baseline; justify-content:
 .date { min-width: 0; }
 h1 { font: 800 30px/1 "Fraunces", Georgia, serif; margin: 0; letter-spacing: -0.02em; background: linear-gradient(90deg, var(--accent), #ff4d7e 55%, #9a6bff); -webkit-background-clip: text; background-clip: text; color: transparent; }
 .date { color: var(--muted); font-size: 14px; }
-.proto { margin: 14px 0 0; padding: 8px 12px; border: 1px dashed var(--line); border-radius: 10px; font-size: 13px; color: var(--muted); display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
-.proto button { font: inherit; font-size: 13px; padding: 4px 10px; border-radius: 8px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); cursor: pointer; }
+/* Konto: eine Zeile unter dem Spruch, klappt zum Anmelden auf */
+.acct { margin: 14px 0 0; padding: 9px 12px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); font-size: 14px; color: var(--muted); }
+.acct .row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.acct .row > span { flex: 1 1 200px; min-width: 0; overflow-wrap: anywhere; }
+.acct b { color: var(--ink); font-weight: 600; }
+.acct button, .acct input { font: inherit; font-size: 14px; padding: 7px 12px; border-radius: 9px; border: 1px solid var(--line); background: var(--bg); color: var(--ink); }
+.acct button { cursor: pointer; }
+.acct button.pri { background: var(--accent); border-color: var(--accent); color: #1d1b17; font-weight: 700; }
+.acct input { flex: 1 1 180px; min-width: 0; background: var(--card); color: #1d1b17; }
+.acct input.code { letter-spacing: .3em; font-variant-numeric: tabular-nums; flex: 0 1 150px; }
+.acct form { margin-top: 10px; }
+.acct .msg { margin-top: 8px; font-size: 13px; }
+.acct .msg.err { color: var(--red); }
+.acct [hidden] { display: none !important; }
+.linkbtn { font: inherit; background: none; border: 0; padding: 0; color: var(--muted); text-decoration: underline; cursor: pointer; }
 
 .table { margin-top: 18px; background: radial-gradient(120% 90% at 50% 0%, var(--felt2), var(--felt)); border-radius: 22px; padding: 22px 14px 20px; box-shadow: inset 0 0 0 1px rgba(255,255,255,.06), 0 10px 30px -18px rgba(0,0,0,.5); }
 .daycard { color: #e9e2cf; font-size: 13px; text-align: center; margin-bottom: 14px; opacity: .9; }
@@ -164,8 +177,13 @@ a:focus-visible, button:focus-visible, summary:focus-visible { outline: 2px soli
 <main>
   <header><h1><span id="egg">D</span>aily Hand</h1><span class="date" id="date"></span></header>
   <p class="tagline">Five cards, once a day. How lucky are you?</p>
-  <div class="proto">Test version: “New day” lets you try more hands right away.
-    <button id="newday">New day</button><button id="wipe">Reset collection</button></div>
+  <div class="acct" id="acct" hidden>
+    <div class="row" id="acctGuest"><span>Sign in to keep your collection on every device.</span><button type="button" id="signin">Sign in</button></div>
+    <div class="row" id="acctUser" hidden><span>Signed in as <b id="acctEmail"></b></span><button type="button" id="signout">Sign out</button></div>
+    <form id="fEmail" class="row" hidden><input id="email" type="email" autocomplete="email" placeholder="you@example.com" required aria-label="Email address"><button class="pri" type="submit">Send code</button></form>
+    <form id="fCode" class="row" hidden><input id="code" class="code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="000000" required aria-label="6-digit code"><button class="pri" type="submit">Sign in</button><button type="button" id="back" class="linkbtn">Other email</button></form>
+    <div class="msg" id="acctMsg" role="status"></div>
+  </div>
 
   <section class="table">
     <div class="daycard">Card of the day: <b id="daycard"></b></div>
@@ -192,12 +210,16 @@ a:focus-visible, button:focus-visible, summary:focus-visible { outline: 2px soli
     <a href="https://pendelradius.de/impressum" rel="noopener">Legal notice (Impressum)</a>
     <a href="fonts/OFL-Fraunces.txt">Fraunces font licence</a>
     <a href="fonts/OFL-BricolageGrotesque.txt">Bricolage Grotesque font licence</a>
+    <button type="button" class="linkbtn" id="delete" hidden>Delete my data</button>
     <details>
       <summary>Privacy</summary>
-      <p><b>Hosting.</b> This site is hosted on GitHub Pages by GitHub, Inc. (USA). To deliver the page, GitHub processes your IP address and technical request data such as browser and time. Legal basis: Art. 6(1)(f) GDPR, our legitimate interest in a working website. Data may be processed in the USA; GitHub states that it participates in the EU-U.S. Data Privacy Framework. How long GitHub keeps this data is set by GitHub, not by us: <a href="https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement" rel="noopener">GitHub Privacy Statement</a>.</p>
-      <p><b>Your game.</b> Your hands and your collection are saved only in your browser (local storage) so the game remembers today’s hand. Nothing is sent to us. This storage is strictly necessary for the game you asked for (§ 25(2) no. 2 TDDDG). You can delete it at any time with “Reset collection” or in your browser settings.</p>
-      <p><b>No cookies, no tracking, no ads.</b> Fonts are loaded from this site, not from Google.</p>
-      <p><b>Your rights.</b> The controller is named in the legal notice. You have the right to access, rectification, erasure, restriction of processing, data portability and to lodge a complaint with a data protection authority. <b>You may object at any time to processing based on Art. 6(1)(f) GDPR (Art. 21 GDPR).</b> You do not have to provide any data; without your IP address the page cannot be delivered. There is no automated decision-making.</p>
+      <p><b>Controller.</b> The person responsible for this site is named with contact details in the <a href="https://pendelradius.de/impressum" rel="noopener">legal notice</a>.</p>
+      <p><b>Hosting.</b> The site and its game server run on Cloudflare Workers by Cloudflare, Inc. (USA). To deliver the page and protect it from attacks, Cloudflare processes your IP address and technical request data such as browser and time. Legal basis: Art. 6(1)(f) GDPR, our legitimate interest in a working, secure website. We do not keep request logs ourselves; how long Cloudflare keeps such data is set by Cloudflare: <a href="https://www.cloudflare.com/privacypolicy/" rel="noopener">Cloudflare Privacy Policy</a>.</p>
+      <p><b>Your game.</b> When you deal your first hand, the server creates a game account with a random ID and stores a cookie (<code>dh_s</code>) with a random sign-in token, so it knows your hands. We store your hands, your achievements and when you played. Purpose: providing the game you asked for, including one hand per day and your collection. Legal basis: Art. 6(1)(b) GDPR. The cookie is strictly necessary for this (§ 25(2) no. 2 TDDDG). There is no other cookie, no tracking and no advertising; fonts are loaded from this site.</p>
+      <p><b>Sign-in by email.</b> If you sign in, we store your email address with your game account and send you a 6-digit code by email. To send the code we use Resend (Plus Five Five, Inc., USA) as our processor. To stop abuse we store a keyed hash of your IP address for each code request. Codes are stored only as a keyed hash and deleted after use or within a day. Legal basis: Art. 6(1)(b) GDPR. Signing in is optional; without it you can play as a guest on this device.</p>
+      <p><b>Recipients and transfers.</b> Cloudflare and Resend process data on our behalf. Both are in the USA and state that they are certified under the EU-U.S. Data Privacy Framework; transfers are based on the EU Commission’s adequacy decision for it (Art. 45 GDPR).</p>
+      <p><b>How long.</b> Your account and game data are kept until you delete them with “Delete my data” at the bottom of this page; this deletes them at once. Guest accounts that have not played for 180 days are deleted automatically. Sign-in tokens expire after one year.</p>
+      <p><b>Your rights.</b> You have the right to access, rectification, erasure, restriction of processing and data portability, and to lodge a complaint with a data protection authority. <b>You may object at any time, on grounds relating to your particular situation, to processing based on Art. 6(1)(f) GDPR (Art. 21 GDPR).</b> You do not have to provide any data and there is no legal obligation to do so; without the cookie the game cannot remember your hand, without an email address you cannot sign in. There is no automated decision-making.</p>
     </details>
   </footer>
 </main>
@@ -211,22 +233,25 @@ var DATA = /*DATA*/;
   var SUIT_NAMES = ['Spades', 'Hearts', 'Diamonds', 'Clubs'];
   var RANK_FULL = { 11: 'Jack', 12: 'Queen', 13: 'King', 14: 'Ace' };
   var $ = function (id) { return document.getElementById(id); };
-  var store = {
-    get: function (k) { try { return JSON.parse(localStorage.getItem(k)); } catch (e) { return null; } },
-    set: function (k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
-  };
   var fmt = function (n) { return n.toLocaleString('en-US'); };
+  // Spielstand der Testversion lag im Browser; jetzt liegt er auf dem Server, die alten Einträge werden entfernt
+  try { Object.keys(localStorage).forEach(function (k) { if (k.indexOf('th-') === 0) localStorage.removeItem(k); }); } catch (e) {}
 
-  // Prototyp: "Tag" lässt sich vorspulen, damit man mehrere Hände ausprobieren kann
-  var offset = store.get('th-offset') || 0;
-  var now = new Date(Date.now() + offset * 864e5);
-  var dayKey = now.getFullYear() + '-' + (now.getMonth() + 1) + '-' + now.getDate();
-  $('date').textContent = now.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
-
-  var seed = now.getFullYear() * 10000 + (now.getMonth() + 1) * 100 + now.getDate();
-  var dayCard = Math.imul(seed, 2654435761) >>> 0; dayCard = dayCard % 52;
-  var dr = TH.rankOf(dayCard);
-  $('daycard').textContent = (RANK_FULL[dr] || dr) + ' of ' + SUIT_NAMES[TH.suitOf(dayCard)] + ' ' + SUITS[TH.suitOf(dayCard)];
+  // Server: zieht die Karten und speichert Hand und Sammlung. Ein Tag ist ein UTC-Tag.
+  function api(path, body) {
+    var opt = body ? { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body), credentials: 'same-origin' } : { credentials: 'same-origin' };
+    return fetch('/api/' + path, opt).then(function (r) {
+      return r.json().catch(function () { return {}; }).then(function (d) { if (!r.ok) throw new Error(d.error || 'Connection problem. Please try again.'); return d; });
+    }, function () { throw new Error('No connection. Please try again.'); });
+  }
+  var now = null, dayCard = -1, coll = {}, user = null, LOADED = Date.now();
+  function setDay(day, dc) {
+    now = new Date(day + 'T12:00:00Z');
+    $('date').textContent = now.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', timeZone: 'UTC' });
+    dayCard = dc;
+    var dr = TH.rankOf(dayCard);
+    $('daycard').textContent = (RANK_FULL[dr] || dr) + ' of ' + SUIT_NAMES[TH.suitOf(dayCard)] + ' ' + SUITS[TH.suitOf(dayCard)];
+  }
 
   function cardHTML(id) {
     var s = TH.suitOf(id), r = TH.rankLabel(TH.rankOf(id));
@@ -241,13 +266,6 @@ var DATA = /*DATA*/;
     $('hand').innerHTML = h;
   }
 
-  function drawHand() {
-    var deck = [], out = [], buf = new Uint32Array(5);
-    for (var i = 0; i < 52; i++) deck.push(i);
-    crypto.getRandomValues(buf);
-    for (var j = 0; j < 5; j++) { var k = j + (buf[j] % (52 - j)); var t = deck[j]; deck[j] = deck[k]; deck[k] = t; out.push(deck[j]); }
-    return out;
-  }
   function info(i) {
     var a = TH.LIST[i], p = DATA.prob[a.id];
     return { a: a, p: p, pts: TH.ptsOf(p), tier: TH.tierOf(p) };
@@ -327,7 +345,7 @@ var DATA = /*DATA*/;
   }
 
   function renderCollection() {
-    var coll = store.get('th-coll') || {}, have = 0, html = '', lastG = '';
+    var have = 0, html = '', lastG = '';
     // nach Seltenheit sortiert: von gewöhnlich bis legendär, je Stufe eine Überschrift
     var order = TH.LIST.map(function (a, i) { return i; }).sort(function (a, b) { return DATA.prob[TH.LIST[b].id] - DATA.prob[TH.LIST[a].id]; });
     order.forEach(function (i) {
@@ -341,9 +359,9 @@ var DATA = /*DATA*/;
     $('collcount').textContent = have + ' of ' + TH.LIST.length;
   }
 
-  function showResult(hand, animate, firstsOverride) {
+  function showResult(hand, animate, firsts) {
     var hits = TH.hits(hand, dayCard).map(info).sort(function (a, b) { return a.pts - b.pts; });
-    var firsts = firstsOverride || store.get('th-new-' + dayKey) || []; // heute zum ersten Mal erreichte Erfolge
+    firsts = firsts || []; // heute zum ersten Mal erreichte Erfolge
     var total = hits.reduce(function (s, x) { return s + x.pts; }, 0);
     var slots = $('hand').children;
     hand.forEach(function (id, i) { slots[i].innerHTML = cardHTML(id); });
@@ -403,10 +421,10 @@ var DATA = /*DATA*/;
         $('handname').style.setProperty('--hc', 'var(--t-' + best + ')');
         $('wait').style.display = 'block'; tick(); if (animate) renderCollection();
       }, animate ? endAt + 600 : 0);
-      shareText = 'Daily Hand · ' + now.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + '\n' +
+      shareText = 'Daily Hand · ' + now.toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' }) + '\n' +
         hand.map(function (id) { return TH.rankLabel(TH.rankOf(id)) + SUITS[TH.suitOf(id)]; }).join(' ') + '\n' +
         fmt(total) + ' points · better than ' + pctText(percentile(total)) + '%\n' +
-        'Rarest: ' + hits[hits.length - 1].a.name + ' (' + oneIn(hits[hits.length - 1].p) + ')\n' + location.origin + location.pathname;
+        'Rarest: ' + hits[hits.length - 1].a.name + ' (' + oneIn(hits[hits.length - 1].p) + ')\n' + location.origin + '/';
     }, after);
     return hits;
   }
@@ -445,30 +463,79 @@ var DATA = /*DATA*/;
     }, 30);
   }
   function tick() {
-    var real = new Date(), next = new Date(real); next.setHours(24, 0, 0, 0);
+    // neue Hand um Mitternacht UTC, für alle Spieler gleichzeitig
+    var real = new Date(), next = new Date(real); next.setUTCHours(24, 0, 0, 0);
+    // Seite war über Mitternacht offen: neu laden, der Server entscheidet über den neuen Tag (nicht in einer Schleife)
+    if (next - real < 1500 && real - LOADED > 60000) { setTimeout(function () { location.reload(); }, 3000); }
     var s = Math.max(0, Math.floor((next - real) / 1000));
     var h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60), sec = s % 60;
     $('wait').textContent = 'Next hand in ' + h + 'h ' + String(m).padStart(2, '0') + 'm ' + String(sec).padStart(2, '0') + 's';
   }
   setInterval(function () { if ($('wait').style.display === 'block') tick(); }, 1000);
 
+  function toast(msg, ms) { var t = $('toast'); t.textContent = msg; t.classList.add('on'); setTimeout(function () { t.classList.remove('on'); }, ms || 2500); }
+
   emptyHand();
   renderCollection();
-  var saved = store.get('th-day-' + dayKey);
-  if (saved) showResult(saved, false);
+  var ready = false, busy = false;
+  function load() {
+    api('state').then(function (st) {
+      setDay(st.day, st.dayCard);
+      coll = st.coll || {}; user = st.user;
+      renderCollection(); renderAcct();
+      if (st.today) showResult(st.today.hand, false, st.today.firsts);
+      ready = true;
+    }, function (e) { toast(e.message + ' Reloading…', 4000); setTimeout(load, 5000); });
+  }
+  load();
 
+  // Der Server zieht die Karten; die Seite zeigt sie nur an. Ein zweiter Klick am selben Tag liefert dieselbe Hand.
   $('go').onclick = function () {
-    var hand = drawHand();
-    store.set('th-day-' + dayKey, hand);
-    var coll = store.get('th-coll') || {}, firsts = [];
-    TH.hits(hand, dayCard).forEach(function (i) {
-      var id = TH.LIST[i].id;
-      if (!coll[id]) firsts.push(id); // noch nie gehabt: bekommt das Schild „New"
-      coll[id] = (coll[id] || 0) + 1;
-    });
-    store.set('th-coll', coll);
-    store.set('th-new-' + dayKey, firsts);
-    showResult(hand, true);
+    if (!ready || busy) return;
+    busy = true;
+    api('deal', {}).then(function (r) {
+      coll = r.coll || coll;
+      if (!user) user = { email: null };
+      renderAcct();
+      showResult(r.hand, !r.again, r.firsts);
+      if (r.again) renderCollection();
+    }, function (e) { toast(e.message); }).then(function () { busy = false; });
+  };
+
+  // Konto: Anmelden mit einem 6-stelligen Code per E-Mail, kein Passwort
+  var pendingEmail = '';
+  function msg(t, err) { $('acctMsg').textContent = t || ''; $('acctMsg').className = 'msg' + (err ? ' err' : ''); }
+  function show(id, on) { $(id).hidden = !on; }
+  function renderAcct(mode) {
+    $('acct').hidden = false;
+    var signed = user && user.email;
+    show('acctGuest', !signed && !mode); show('acctUser', !!signed && !mode);
+    show('fEmail', mode === 'email'); show('fCode', mode === 'code');
+    if (signed) $('acctEmail').textContent = user.email;
+    $('delete').hidden = !user;
+  }
+  $('signin').onclick = function () { msg(''); renderAcct('email'); $('email').focus(); };
+  $('back').onclick = function () { msg(''); renderAcct('email'); $('email').focus(); };
+  $('fEmail').onsubmit = function (ev) {
+    ev.preventDefault();
+    var btn = this.querySelector('button'); btn.disabled = true; msg('Sending…');
+    pendingEmail = $('email').value.trim();
+    api('auth/start', { email: pendingEmail }).then(function (r) {
+      renderAcct('code'); $('code').value = r.devCode || ''; $('code').focus();
+      msg('We sent a 6-digit code to ' + pendingEmail + '. Check your spam folder if it does not arrive.');
+    }, function (e) { msg(e.message, true); }).then(function () { btn.disabled = false; });
+  };
+  $('fCode').onsubmit = function (ev) {
+    ev.preventDefault();
+    var btn = this.querySelector('button'); btn.disabled = true;
+    api('auth/verify', { email: pendingEmail, code: $('code').value }).then(function () { location.reload(); },
+      function (e) { msg(e.message, true); btn.disabled = false; });
+  };
+  $('signout').onclick = function () { api('auth/logout', {}).then(function () { location.reload(); }, function (e) { toast(e.message); }); };
+  $('delete').onclick = function () {
+    var what = user && user.email ? 'your account (' + user.email + ')' : 'your game data on this device';
+    if (!confirm('Delete ' + what + ' with all hands and your collection? This cannot be undone.')) return;
+    api('account/delete', {}).then(function () { location.reload(); }, function (e) { toast(e.message); });
   };
 
   // Easter Egg für David als Entwickler: Klick auf das „D“ im Logo teilt einmal die beste mögliche Hand aus
@@ -477,7 +544,6 @@ var DATA = /*DATA*/;
     var best = [10, 11, 12, 13, 14].map(function (r) { return TH.cardId(r, 0); });
     dayCard = TH.cardId(14, 0);
     $('daycard').textContent = 'Ace of Spades ' + SUITS[0];
-    var coll = store.get('th-coll') || {};
     var firsts = TH.hits(best, dayCard).map(function (i) { return TH.LIST[i].id; }).filter(function (id) { return !coll[id]; });
     emptyHand();
     $('handname').classList.remove('on'); $('handname').textContent = '';
@@ -487,15 +553,10 @@ var DATA = /*DATA*/;
     showResult(best, true, firsts);
   };
   $('share').onclick = function () {
-    var done = function () { var t = $('toast'); t.textContent = 'Copied to clipboard'; t.classList.add('on'); setTimeout(function () { t.classList.remove('on'); }, 1600); };
+    var done = function () { toast('Copied to clipboard', 1600); };
     try { navigator.clipboard.writeText(shareText).then(done, function () { fallback(); }); } catch (e) { fallback(); }
   };
-  function fallback() { var t = $('toast'); t.textContent = shareText.split('\n').join(' · '); t.classList.add('on'); setTimeout(function () { t.classList.remove('on'); }, 5000); }
-  $('newday').onclick = function () { store.set('th-offset', offset + 1); location.reload(); };
-  $('wipe').onclick = function () {
-    try { Object.keys(localStorage).forEach(function (k) { if (k.indexOf('th-') === 0) localStorage.removeItem(k); }); } catch (e) {}
-    location.reload();
-  };
+  function fallback() { toast(shareText.split('\n').join(' · '), 5000); }
 })();
 </script>
 </body>

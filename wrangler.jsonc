@@ -1,0 +1,28 @@
+{
+  // Daily Hand: Worker (API unter /api) plus statische Seite aus public/
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "dailyhand",
+  "main": "worker/index.js",
+  "compatibility_date": "2026-09-01",
+  "assets": {
+    "directory": "./public",
+    "binding": "ASSETS",
+    "run_worker_first": ["/api/*"]
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "dailyhand",
+      // wird nach `wrangler d1 create dailyhand` durch die echte ID ersetzt
+      "database_id": "00000000-0000-0000-0000-000000000000",
+      "migrations_dir": "migrations"
+    }
+  ],
+  // täglich aufräumen: abgelaufene Codes und Sitzungen, lange inaktive Gastkonten
+  "triggers": { "crons": ["17 3 * * *"] },
+  "vars": {
+    "MAIL_MODE": "resend",
+    "MAIL_FROM": "Daily Hand <login@example.com>"
+  },
+  "observability": { "enabled": false }
+}

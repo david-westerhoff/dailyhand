@@ -21,7 +21,8 @@
   // täglich aufräumen: abgelaufene Codes und Sitzungen, lange inaktive Gastkonten
   "triggers": { "crons": ["17 3 * * *"] },
   "vars": {
-    "MAIL_MODE": "resend",
+    // "off" bis Domain und Resend eingerichtet sind: Anmelden ausgeblendet, nur Gastkonten
+    "MAIL_MODE": "off",
     "MAIL_FROM": "Daily Hand <login@example.com>"
   },
   "observability": { "enabled": false }

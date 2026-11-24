@@ -2,6 +2,8 @@
 
 Five cards, once a day. Draw your hand, unlock achievements and fill your collection.
 
+Play: https://dailyhand.david-westerhoff07.workers.dev (the old GitHub Pages address redirects there). Sign-in by email is switched off (`MAIL_MODE=off`) until a domain and Resend are set up.
+
 ## How it works
 
 - **Page**: `src/template.html`, `src/ach.js` and `src/data.json` are built into `public/index.html` (`npm run build`).

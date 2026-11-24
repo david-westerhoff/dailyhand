@@ -107,7 +107,7 @@ async function getState(env, req) {
     today = playOut(await env.DB.prepare('SELECT cards, firsts FROM plays WHERE user_id = ? AND day = ?').bind(user.id, day).first());
     coll = await collection(env, user.id);
   }
-  return json({ day, dayCard: dayCardOf(day), user: user ? { email: user.email } : null, today, coll });
+  return json({ day, dayCard: dayCardOf(day), login: env.MAIL_MODE !== 'off', user: user ? { email: user.email } : null, today, coll });
 }
 
 async function deal(env, req) {
@@ -159,6 +159,7 @@ async function sendMail(env, to, code) {
 }
 
 async function authStart(env, req, body) {
+  if (env.MAIL_MODE === 'off') return json({ error: 'Sign-in is not available yet.' }, 503);
   const email = normEmail(body.email);
   if (!email) return json({ error: 'Please enter a valid email address.' }, 400);
   const now = Date.now(), hourAgo = now - 36e5;

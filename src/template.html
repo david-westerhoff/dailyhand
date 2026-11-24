@@ -216,8 +216,8 @@ a:focus-visible, button:focus-visible, summary:focus-visible { outline: 2px soli
       <p><b>Controller.</b> The person responsible for this site is named with contact details in the <a href="https://pendelradius.de/impressum" rel="noopener">legal notice</a>.</p>
       <p><b>Hosting.</b> The site and its game server run on Cloudflare Workers by Cloudflare, Inc. (USA). To deliver the page and protect it from attacks, Cloudflare processes your IP address and technical request data such as browser and time. Legal basis: Art. 6(1)(f) GDPR, our legitimate interest in a working, secure website. We do not keep request logs ourselves; how long Cloudflare keeps such data is set by Cloudflare: <a href="https://www.cloudflare.com/privacypolicy/" rel="noopener">Cloudflare Privacy Policy</a>.</p>
       <p><b>Your game.</b> When you deal your first hand, the server creates a game account with a random ID and stores a cookie (<code>dh_s</code>) with a random sign-in token, so it knows your hands. We store your hands, your achievements and when you played. Purpose: providing the game you asked for, including one hand per day and your collection. Legal basis: Art. 6(1)(b) GDPR. The cookie is strictly necessary for this (§ 25(2) no. 2 TDDDG). There is no other cookie, no tracking and no advertising; fonts are loaded from this site.</p>
-      <p><b>Sign-in by email.</b> If you sign in, we store your email address with your game account and send you a 6-digit code by email. To send the code we use Resend (Plus Five Five, Inc., USA) as our processor. To stop abuse we store a keyed hash of your IP address for each code request. Codes are stored only as a keyed hash and deleted after use or within a day. Legal basis: Art. 6(1)(b) GDPR. Signing in is optional; without it you can play as a guest on this device.</p>
-      <p><b>Recipients and transfers.</b> Cloudflare and Resend process data on our behalf. Both are in the USA and state that they are certified under the EU-U.S. Data Privacy Framework; transfers are based on the EU Commission’s adequacy decision for it (Art. 45 GDPR).</p>
+      <p class="if-login"><b>Sign-in by email.</b> If you sign in, we store your email address with your game account and send you a 6-digit code by email. To send the code we use Resend (Plus Five Five, Inc., USA) as our processor. To stop abuse we store a keyed hash of your IP address for each code request. Codes are stored only as a keyed hash and deleted after use or within a day. Legal basis: Art. 6(1)(b) GDPR. Signing in is optional; without it you can play as a guest on this device.</p>
+      <p><b>Recipients and transfers.</b> Cloudflare processes data on our behalf<span class="if-login">, and Resend does so for sign-in emails</span>. Our processors are based in the USA and state that they are certified under the EU-U.S. Data Privacy Framework; transfers are based on the EU Commission’s adequacy decision for it (Art. 45 GDPR).</p>
       <p><b>How long.</b> Your account and game data are kept until you delete them with “Delete my data” at the bottom of this page; this deletes them at once. Guest accounts that have not played for 180 days are deleted automatically. Sign-in tokens expire after one year.</p>
       <p><b>Your rights.</b> You have the right to access, rectification, erasure, restriction of processing and data portability, and to lodge a complaint with a data protection authority. <b>You may object at any time, on grounds relating to your particular situation, to processing based on Art. 6(1)(f) GDPR (Art. 21 GDPR).</b> You do not have to provide any data and there is no legal obligation to do so; without the cookie the game cannot remember your hand, without an email address you cannot sign in. There is no automated decision-making.</p>
     </details>
@@ -482,6 +482,9 @@ var DATA = /*DATA*/;
     api('state').then(function (st) {
       setDay(st.day, st.dayCard);
       coll = st.coll || {}; user = st.user;
+      // Anmelden nur, wenn der Server Mails verschicken kann; sonst Kontozeile und Datenschutzabsatz zum Login ausblenden
+      loginOn = st.login !== false;
+      document.querySelectorAll('.if-login').forEach(function (el) { el.hidden = !loginOn; });
       renderCollection(); renderAcct();
       if (st.today) showResult(st.today.hand, false, st.today.firsts);
       ready = true;
@@ -503,11 +506,11 @@ var DATA = /*DATA*/;
   };
 
   // Konto: Anmelden mit einem 6-stelligen Code per E-Mail, kein Passwort
-  var pendingEmail = '';
+  var pendingEmail = '', loginOn = false;
   function msg(t, err) { $('acctMsg').textContent = t || ''; $('acctMsg').className = 'msg' + (err ? ' err' : ''); }
   function show(id, on) { $(id).hidden = !on; }
   function renderAcct(mode) {
-    $('acct').hidden = false;
+    $('acct').hidden = !loginOn;
     var signed = user && user.email;
     show('acctGuest', !signed && !mode); show('acctUser', !!signed && !mode);
     show('fEmail', mode === 'email'); show('fCode', mode === 'code');

@@ -117,14 +117,14 @@ h2 span { font: 400 14px "Bricolage Grotesque", sans-serif; color: var(--muted);
 .badge { width: 46px; height: 46px; border-radius: 12px; display: grid; place-items: center; font: 800 15px/1 "Fraunces", serif; letter-spacing: -.02em; color: #fff; white-space: nowrap;
   background: linear-gradient(140deg, color-mix(in srgb, var(--tc) 65%, #fff), var(--tc) 60%, color-mix(in srgb, var(--tc) 80%, #000)); box-shadow: inset 0 1px 0 rgba(255,255,255,.35), inset 0 -2px 0 rgba(0,0,0,.18), 0 0 14px -4px var(--glow); text-shadow: 0 1px 2px rgba(0,0,0,.35); }
 .gewoehnlich .badge { background: var(--line); color: var(--muted); text-shadow: none; box-shadow: none; }
-.ach.new .badge { animation: spinin .9s cubic-bezier(.2,1.4,.4,1) both; }
+.ach.new .badge { animation: spinin 1s cubic-bezier(.2,1.4,.4,1) both; }
 .ach.new .pp { animation: pop .5s .5s cubic-bezier(.2,1.8,.4,1) both; }
 @keyframes spinin { 0% { transform: rotate(-160deg) scale(.3); } 100% { transform: none; } }
 @keyframes pop { 0% { transform: scale(.4); opacity: 0; } 100% { transform: none; opacity: 1; } }
-.ach.new { animation: flyin 1s cubic-bezier(.18,.9,.3,1) both; }
+.ach.new { animation: flyin 1.15s cubic-bezier(.18,.9,.3,1) both; }
 /* Seltene Erfolge fliegen langsamer ein */
-.ach.selten.new { animation-duration: 1.3s; } .ach.episch.new { animation-duration: 1.6s; } .ach.legendaer.new { animation-duration: 2s; }
-.ach.selten.new .badge, .ach.episch.new .badge { animation-duration: 1.3s; } .ach.legendaer.new .badge { animation-duration: 1.7s; }
+.ach.selten.new { animation-duration: 1.3s; } .ach.episch.new { animation-duration: 1.45s; } .ach.legendaer.new { animation-duration: 1.6s; }
+.ach.selten.new .badge, .ach.episch.new .badge { animation-duration: 1.2s; } .ach.legendaer.new .badge { animation-duration: 1.35s; }
 @keyframes flyin {
   0% { opacity: 0; transform: translate(120%, -40px) rotate(8deg) scale(.85); }
   60% { opacity: 1; transform: translate(-4%, 4px) rotate(-1.5deg) scale(1.02); }
@@ -150,6 +150,26 @@ h2 span { font: 400 14px "Bricolage Grotesque", sans-serif; color: var(--muted);
 .ach.legendaer::after { content: ""; position: absolute; inset: 0; pointer-events: none; background: linear-gradient(110deg, transparent 40%, rgba(255,255,255,.18) 50%, transparent 60%); transform: translateX(-120%); animation: shine 5s ease-in-out 1.2s infinite; }
 @keyframes shine { 0% { transform: translateX(-120%); } 30%, 100% { transform: translateX(120%); } }
 #fx { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 50; }
+
+/* Badges: Ziele über die Zeit; Farbe = höchste erreichte Stufe (Bronze, Silber, Gold) */
+.bgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 8px; }
+.bc { display: grid; grid-template-columns: 40px 1fr; gap: 10px; padding: 10px 12px; border-radius: 12px; background: var(--surface);
+  border: 1.5px solid color-mix(in srgb, var(--mc) 70%, var(--line)); }
+.bc .bi { width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; font: 800 17px/1 "Fraunces", serif; color: #fff;
+  background: radial-gradient(circle at 35% 30%, color-mix(in srgb, var(--mc) 55%, #fff), var(--mc) 60%, color-mix(in srgb, var(--mc) 70%, #000));
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.35), 0 0 0 2px color-mix(in srgb, var(--mc) 40%, transparent); text-shadow: 0 1px 2px rgba(0,0,0,.35); }
+.bc.none .bi { background: var(--line); color: var(--muted); box-shadow: none; text-shadow: none; }
+.bc .bt { min-width: 0; }
+.bc .nm { font-weight: 700; font-size: 15px; }
+.bc .ds { font-size: 12px; color: var(--muted); }
+.pills { display: flex; gap: 4px; flex-wrap: wrap; margin: 6px 0 4px; }
+.pill { font-size: 11px; font-weight: 700; padding: 1px 7px; border-radius: 999px; color: var(--muted); border: 1px solid var(--line); font-variant-numeric: tabular-nums; }
+.pill.on { color: #1d1b17; background: var(--mc); border-color: var(--mc); }
+.bar { height: 6px; border-radius: 3px; background: var(--line); overflow: hidden; margin-top: 2px; }
+.bar i { display: block; height: 100%; background: var(--accent); border-radius: 3px; }
+.bp { font-size: 12px; color: var(--muted); margin-top: 3px; font-variant-numeric: tabular-nums; }
+.ach.bdg .badge { border-radius: 50%; }
+.ach.bdg .tp { color: #1d1b17; background: var(--tc); }
 
 .coll { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
 .ci { display: grid; grid-template-columns: 34px 1fr; gap: 4px 10px; align-items: start; border-radius: 12px; padding: 9px 10px;
@@ -204,6 +224,9 @@ a:focus-visible, button:focus-visible, summary:focus-visible { outline: 2px soli
     <div id="today"></div>
   </section>
 
+  <h2>Badges <span id="badgecount"></span></h2>
+  <div id="badges" class="bgrid"></div>
+
   <h2>Collection <span id="collcount"></span></h2>
   <div id="coll"></div>
   <footer>
@@ -227,6 +250,7 @@ a:focus-visible, button:focus-visible, summary:focus-visible { outline: 2px soli
 <canvas id="fx"></canvas>
 <script>
 /*ACH*/
+/*BADGES*/
 var DATA = /*DATA*/;
 (function () {
   var SUITS = ['♠︎', '♥︎', '♦︎', '♣︎'];
@@ -359,7 +383,45 @@ var DATA = /*DATA*/;
     $('collcount').textContent = have + ' of ' + TH.LIST.length;
   }
 
-  function showResult(hand, animate, firsts) {
+  // ---------- Badges ----------
+  var MEDAL = ['#c27c3e', '#9aa7b4', '#e0a91b'];
+  var stats = null, statsBefore = null;
+  function statText(stat, v) { return stat === 'bestPct' ? pctText(v) + '%' : fmt(v); }
+  function goalText(s) { return s.label || fmt(s.goal); }
+  function newBadges() {
+    var before = BADGES.earned(statsBefore);
+    return BADGES.earned(stats).filter(function (k) { return before.indexOf(k) < 0; });
+  }
+  function badgeRow(key, isNew) {
+    var b = BADGES.LIST.filter(function (x) { return x.id === key.split(':')[0]; })[0], i = +key.split(':')[1], s = b.steps[i];
+    return '<div class="ach bdg selten' + (isNew ? ' new' : '') + '" style="--tc:' + MEDAL[i] + '"><div class="badge">' + b.icon + '</div>' +
+      '<div class="tx"><div class="nm">' + b.name + '</div><div class="ds">' + b.desc + ': ' + goalText(s) + '</div></div>' +
+      '<div class="rt"><div class="tp">' + BADGES.LEVELS[i] + '</div><div class="od">Badge</div></div></div>';
+  }
+  function renderBadges() {
+    if (!stats) return;
+    var have = 0, html = '';
+    BADGES.LIST.forEach(function (b) {
+      var lvl = -1;
+      b.steps.forEach(function (s, i) { if ((stats[s.stat] || 0) >= s.goal) lvl = i; });
+      have += lvl + 1;
+      var next = b.steps[lvl + 1], prog = '';
+      if (next) {
+        var v = stats[next.stat] || 0, f = Math.min(1, v / next.goal);
+        prog = '<div class="bar"><i style="width:' + (f * 100).toFixed(1) + '%"></i></div><div class="bp">' +
+          // Ziel als Zahl: „All Common: 11 / 20“, „40.3% / 90%“, „7 / 30“
+          (next.label && !/\d/.test(next.label) ? next.label + ': ' : '') + statText(next.stat, v) + ' / ' + (next.stat === 'bestPct' ? next.label : fmt(next.goal)) + '</div>';
+      } else prog = '<div class="bp">All levels done</div>';
+      var pills = b.steps.map(function (s, i) { return '<span class="pill' + (i <= lvl ? ' on' : '') + '" style="--mc:' + MEDAL[i] + '">' + goalText(s) + '</span>'; }).join('');
+      html += '<div class="bc' + (lvl < 0 ? ' none' : '') + '" style="--mc:' + (lvl < 0 ? 'var(--line)' : MEDAL[lvl]) + '"><div class="bi">' + b.icon + '</div><div class="bt">' +
+        '<div class="nm">' + b.name + '</div><div class="ds">' + b.desc + (b.id === 'streak' && stats.streak ? ' · now ' + stats.streak : '') + '</div>' +
+        '<div class="pills">' + pills + '</div>' + prog + '</div></div>';
+    });
+    $('badges').innerHTML = html;
+    $('badgecount').textContent = have + ' of ' + BADGES.LIST.length * 3;
+  }
+
+  function showResult(hand, animate, firsts, newB) {
     var hits = TH.hits(hand, dayCard).map(info).sort(function (a, b) { return a.pts - b.pts; });
     firsts = firsts || []; // heute zum ersten Mal erreichte Erfolge
     var total = hits.reduce(function (s, x) { return s + x.pts; }, 0);
@@ -402,7 +464,9 @@ var DATA = /*DATA*/;
       $('pct').innerHTML = 'Better than <b>' + pctText(percentile(total)) + '%</b> of all possible hands';
       var list = $('today'); list.innerHTML = '';
       // Abstand vor jedem Erfolg nach seiner Seltenheit: Gewöhnliches kommt zügig, Seltenes bekommt Bühne
-      var GAP = { gewoehnlich: 650, ungewoehnlich: 950, selten: 1500, episch: 2000, legendaer: 2700 };
+      // 27.11.2026 „wie ein Kompressor“ (Davids Wunsch): alte Abstände 650/950/1500/2000/2700 ms im Verhältnis 2:1
+      // um die Mitte (~1,4 s) zusammengerückt: neu = 1380 · (alt/1380)^0,5
+      var GAP = { gewoehnlich: 950, ungewoehnlich: 1150, selten: 1450, episch: 1650, legendaer: 1950 };
       var shown = 0, at = [], acc = wait0;
       hits.forEach(function (x, i) { if (i > 0) acc += animate ? GAP[x.tier.id] : 0; at.push(acc); });
       var endAt = animate ? acc + GAP[hits[hits.length - 1].tier.id] : 0;
@@ -421,6 +485,16 @@ var DATA = /*DATA*/;
         $('handname').style.setProperty('--hc', 'var(--t-' + best + ')');
         $('wait').style.display = 'block'; tick(); if (animate) renderCollection();
       }, animate ? endAt + 600 : 0);
+      // Neu erreichte Badge-Stufen fliegen nach dem Prozentwert herein
+      var nb = newB || [], bAt = animate ? endAt + 1700 : 0;
+      if (nb.length) $('todaycount').textContent += ' · ' + nb.length + (nb.length === 1 ? ' badge' : ' badges');
+      nb.forEach(function (key, i) {
+        setTimeout(function () {
+          list.insertAdjacentHTML('afterbegin', badgeRow(key, animate));
+          if (animate) { var row = list.firstElementChild; setTimeout(function () { burst(row.querySelector('.badge'), { tier: { id: 'selten' } }); }, 650); }
+        }, bAt + i * (animate ? 1450 : 0));
+      });
+      setTimeout(renderBadges, animate ? bAt + nb.length * 1450 : 0);
       shareText = 'Daily Hand · ' + now.toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' }) + '\n' +
         hand.map(function (id) { return TH.rankLabel(TH.rankOf(id)) + SUITS[TH.suitOf(id)]; }).join(' ') + '\n' +
         fmt(total) + ' points · better than ' + pctText(percentile(total)) + '%\n' +
@@ -481,12 +555,13 @@ var DATA = /*DATA*/;
   function load() {
     api('state').then(function (st) {
       setDay(st.day, st.dayCard);
-      coll = st.coll || {}; user = st.user;
+      coll = st.coll || {}; user = st.user; stats = st.stats; statsBefore = st.statsBefore;
       // Anmelden nur, wenn der Server Mails verschicken kann; sonst Kontozeile und Datenschutzabsatz zum Login ausblenden
       loginOn = st.login !== false;
       document.querySelectorAll('.if-login').forEach(function (el) { el.hidden = !loginOn; });
       renderCollection(); renderAcct();
-      if (st.today) showResult(st.today.hand, false, st.today.firsts);
+      renderBadges();
+      if (st.today) showResult(st.today.hand, false, st.today.firsts, newBadges());
       ready = true;
     }, function (e) { toast(e.message + ' Reloading…', 4000); setTimeout(load, 5000); });
   }
@@ -497,10 +572,10 @@ var DATA = /*DATA*/;
     if (!ready || busy) return;
     busy = true;
     api('deal', {}).then(function (r) {
-      coll = r.coll || coll;
+      coll = r.coll || coll; stats = r.stats || stats; statsBefore = r.statsBefore || statsBefore;
       if (!user) user = { email: null };
       renderAcct();
-      showResult(r.hand, !r.again, r.firsts);
+      showResult(r.hand, !r.again, r.firsts, newBadges());
       if (r.again) renderCollection();
     }, function (e) { toast(e.message); }).then(function () { busy = false; });
   };

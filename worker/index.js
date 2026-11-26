@@ -86,12 +86,53 @@ async function newSession(env, userId) {
   return token;
 }
 
-async function collection(env, userId) {
-  const { results } = await env.DB.prepare('SELECT hits FROM plays WHERE user_id = ?').bind(userId).all();
-  const coll = {};
-  for (const r of results) for (const id of r.hits.split(',')) if (id) coll[id] = (coll[id] || 0) + 1;
-  return coll;
+// Stufe je Erfolg (für die Badges „All Common“ usw.)
+const TIER = Object.fromEntries(TH.LIST.map(a => [a.id, TH.tierOf(DATA.prob[a.id]).id]));
+
+// Anteil aller Hände mit weniger Punkten (wie percentile() auf der Seite)
+export function percentile(score) {
+  const c = DATA.cdf;
+  let lo = 0, hi = c.length - 1, ans = 0;
+  while (lo <= hi) { const mid = (lo + hi) >> 1; if (c[mid][0] <= score) { ans = c[mid][1]; lo = mid + 1; } else hi = mid - 1; }
+  return ans;
 }
+
+// Zahlen für die Badges aus allen Händen eines Spielers (rows nach Tag sortiert)
+export function statsOf(rows, today) {
+  const coll = {};
+  let points = 0, best = 0, run = 0, bestStreak = 0, prev = null;
+  for (const r of rows) {
+    for (const id of r.hits.split(',')) if (id) coll[id] = (coll[id] || 0) + 1;
+    points += r.score;
+    if (r.score > best) best = r.score;
+    const t = Date.parse(r.day + 'T00:00:00Z');
+    run = prev !== null && t - prev === DAY_MS ? run + 1 : 1;
+    if (run > bestStreak) bestStreak = run;
+    prev = t;
+  }
+  // laufende Serie zählt, wenn heute oder gestern gespielt wurde
+  const last = rows.length ? Date.parse(rows[rows.length - 1].day + 'T00:00:00Z') : null;
+  const streak = last !== null && Date.parse(today + 'T00:00:00Z') - last <= DAY_MS ? run : 0;
+  const byTier = {};
+  for (const id of Object.keys(coll)) byTier[TIER[id]] = (byTier[TIER[id]] || 0) + 1;
+  return {
+    coll,
+    stats: {
+      days: rows.length, streak, bestStreak, distinct: Object.keys(coll).length, points,
+      commons: byTier.gewoehnlich || 0, uncommons: byTier.ungewoehnlich || 0, epics: byTier.episch || 0,
+      bestPct: best ? percentile(best) : 0, maxRepeat: Math.max(0, ...Object.values(coll))
+    }
+  };
+}
+
+// Sammlung und Badge-Zahlen; statsBefore = Stand ohne die heutige Hand, damit die Seite neue Stufen zeigen kann
+async function summary(env, userId, day) {
+  const { results } = await env.DB.prepare('SELECT day, hits, score FROM plays WHERE user_id = ? ORDER BY day').bind(userId).all();
+  const now = statsOf(results, day);
+  const before = results.length && results[results.length - 1].day === day ? statsOf(results.slice(0, -1), day) : now;
+  return { coll: now.coll, stats: now.stats, statsBefore: before.stats };
+}
+async function collection(env, userId, day) { return (await summary(env, userId, day)).coll; }
 
 function playOut(row) {
   return row ? { hand: JSON.parse(row.cards), firsts: row.firsts ? row.firsts.split(',') : [] } : null;
@@ -102,12 +143,13 @@ function playOut(row) {
 async function getState(env, req) {
   const day = dayOf(Date.now());
   const user = await currentUser(env, req);
-  let today = null, coll = {};
+  let today = null, sum = { coll: {}, stats: statsOf([], day).stats };
+  sum.statsBefore = sum.stats;
   if (user) {
     today = playOut(await env.DB.prepare('SELECT cards, firsts FROM plays WHERE user_id = ? AND day = ?').bind(user.id, day).first());
-    coll = await collection(env, user.id);
+    sum = await summary(env, user.id, day);
   }
-  return json({ day, dayCard: dayCardOf(day), login: env.MAIL_MODE !== 'off', user: user ? { email: user.email } : null, today, coll });
+  return json({ day, dayCard: dayCardOf(day), login: env.MAIL_MODE !== 'off', user: user ? { email: user.email } : null, today, ...sum });
 }
 
 async function deal(env, req) {
@@ -121,9 +163,9 @@ async function deal(env, req) {
     user = { id, email: null };
   }
   const existing = await env.DB.prepare('SELECT cards, firsts FROM plays WHERE user_id = ? AND day = ?').bind(user.id, day).first();
-  if (existing) return json({ day, ...playOut(existing), coll: await collection(env, user.id), again: true });
+  if (existing) return json({ day, ...playOut(existing), ...(await summary(env, user.id, day)), again: true });
 
-  const before = await collection(env, user.id);
+  const before = await collection(env, user.id, day);
   const hand = drawHand();
   const idx = TH.hits(hand, dayCardOf(day));
   const ids = idx.map(i => TH.LIST[i].id);
@@ -137,11 +179,9 @@ async function deal(env, req) {
   if (!res[0].meta.changes) {
     // zwei Anfragen gleichzeitig: die erste gewinnt
     const row = await env.DB.prepare('SELECT cards, firsts FROM plays WHERE user_id = ? AND day = ?').bind(user.id, day).first();
-    return json({ day, ...playOut(row), coll: await collection(env, user.id), again: true });
+    return json({ day, ...playOut(row), ...(await summary(env, user.id, day)), again: true });
   }
-  const coll = before;
-  for (const id of ids) coll[id] = (coll[id] || 0) + 1;
-  return json({ day, hand, firsts, coll }, 200, setCookie ? { 'set-cookie': cookieHeader(setCookie, req) } : {});
+  return json({ day, hand, firsts, ...(await summary(env, user.id, day)) }, 200, setCookie ? { 'set-cookie': cookieHeader(setCookie, req) } : {});
 }
 
 async function sendMail(env, to, code) {

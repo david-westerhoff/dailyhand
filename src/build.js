@@ -11,4 +11,5 @@ html = html.replace('/*ACH*/', () => fs.readFileSync(d + '/ach.js', 'utf8'))
 fs.writeFileSync(path.join(out, 'index.html'), html);
 for (const f of fs.readdirSync(path.join(d, '..', 'fonts'))) fs.copyFileSync(path.join(d, '..', 'fonts', f), path.join(out, 'fonts', f));
 fs.copyFileSync(path.join(d, '_headers'), path.join(out, '_headers'));
+fs.copyFileSync(path.join(d, 'impressum.html'), path.join(out, 'impressum.html'));
 console.log('public/index.html', (html.length / 1024).toFixed(1), 'KB');
